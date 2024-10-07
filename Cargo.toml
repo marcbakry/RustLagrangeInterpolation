@@ -1,0 +1,9 @@
+[package]
+name = "lagrange_interpolation"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+num = "*"
+num-traits = "*"
+plotly = "*"
