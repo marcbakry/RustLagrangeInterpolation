@@ -33,3 +33,60 @@ pub fn partial_sum<T: LagRealTrait>(xa: &Vec<T>, x: T, j: usize) -> T {
         }
     }).fold(zero::<T>(), |acc,e| acc+e)
 }
+
+pub fn check_duplicate<T: LagRealTrait>(xa: &Vec<T>) {
+    let mut xac = xa.clone();
+    xac.sort_by(|a,b| a.partial_cmp(b).unwrap());
+    let _ = (0..xac.len()-1).map(|i| {let val = (xac[i+1]-xac[i]).abs().as_(); if val < 1e-10 { panic!("'xa' has duplicated entries");
+    } else {return val;}}).collect::<Vec<f64>>();
+}
+
+// TESTS
+#[cfg(test)]
+pub mod utilities_tests {
+    use super::*;
+
+    #[test]
+    pub fn is_midpoint() {
+        let n=5;
+        let stp = 1.0/((n-1) as f64);
+        let x = (0..n).map(|i| i as f64*stp).collect::<Vec<f64>>();
+        let x_mid = midpoints(&x);
+        // 
+        assert_eq!(x.len()-1,x_mid.len());
+        // 
+        let _ = (0..x_mid.len()).map(|i| {
+            let val = (x_mid[i] - (x[i+1]+x[i])/2.0).abs();
+            if val > 1e-14 {
+                panic!("midpoints() failed");
+            } else {
+                true
+            }
+        }).collect::<Vec<_>>();
+    }
+
+    #[test]
+    pub fn working_partial_sum() {
+        let xa = vec![1.0,2.0,3.0,4.0] ;
+        let x = 1.5;
+        let j = 2;
+
+        let val = partial_sum(&xa, x, j);
+        assert!(Float::abs(val+0.4) < 1e-14);
+    }
+
+    #[test]
+    pub fn argsort_indices_are_sorted() {
+        let x = vec![1.1,-2.0,0.4,3.0,std::f64::consts::PI];
+        let indices = argsort(&x);
+
+        assert_eq!(indices,vec![1,2,0,3,4]);
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn no_duplicates() {
+        let x = vec![1.0,2.0,1.0,-3.0];
+        check_duplicate(&x);
+    }
+}

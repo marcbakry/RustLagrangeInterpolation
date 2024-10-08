@@ -30,6 +30,13 @@ U: LagComplexTrait {
     return y;
 }
 
+pub fn lag1_eval_vec<T,U>(xa: &Vec<T>, ya: &Vec<U>, x: &Vec<T>) -> Vec<U> 
+where 
+T: LagRealTrait,
+U: LagComplexTrait {
+    x.iter().map(|&e| lag1_eval(xa, ya, e)).collect::<Vec<U>>()
+}
+
 pub fn lag1_eval_derivative<T,U>(xa: &Vec<T>, ya: &Vec<U>, x: T) -> U 
 where 
 T: LagRealTrait,
@@ -44,5 +51,5 @@ pub fn lag1_eval_derivative_vec<T,U>(xa: &Vec<T>, ya: &Vec<U>, x: &Vec<T>) -> Ve
 where 
 T: LagRealTrait,
 U: LagComplexTrait {
-    x.iter().map(|e| lag1_eval_derivative(&xa, &ya, *e)).collect::<Vec<U>>()
+    x.iter().map(|e| lag1_eval_derivative(xa, ya, *e)).collect::<Vec<U>>()
 }
