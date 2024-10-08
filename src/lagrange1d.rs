@@ -111,6 +111,7 @@ impl<T: LagRealTrait,U: LagComplexTrait> Display for Lagrange1dInterpolator<T,U>
 mod lagrange1d_tests {
     use super::*;
     use std::f64::consts::PI;
+    use num::complex::*;
 
     #[test]
     fn lag1_real_interpolation() {
@@ -150,6 +151,46 @@ mod lagrange1d_tests {
         assert_eq!(lag1_df.diff_order(),1);
         assert!(err_f < 1e-6);
         assert!(err_df < 1e-3);
+    }
+
+    #[test]
+    fn lag1_complex_interpolation() {
+        // function and first derivative
+        let f = |x: f64| Complex::new(f64::cos(2.0*PI*x.powi(2)),f64::sin(2.0*PI*x.powi(2)));
+        let df = |x: f64| Complex::new(-4.0*PI*x*f64::sin(2.0*PI*x.powi(2)), 4.0*PI*x*f64::cos(2.0*PI*x.powi(2)));
+        // interpolation data
+        let (a,b) = (0.0,1.0);
+        let na = 20;
+        let stpa = (b-a)/((na-1) as f64);
+        let xa = (0..na).map(|i| (i as f64)*stpa).collect::<Vec<f64>>();
+        let ya = xa.iter().map(|&x| f(x)).collect::<Vec<_>>();
+        let lag1_f = Lagrange1dInterpolator::new(xa,ya);
+        let lag1_df = lag1_f.differentiate();
+
+        // interpolated data
+        let ni = 100;
+        let stpi = (b-a)/(ni-1) as f64;
+        let xi = (0..ni).map(|i| i as f64*stpi).collect::<Vec<f64>>();
+        let yi_f = lag1_f.eval_vec(&xi);
+        let yi_df = lag1_df.eval_vec(&xi);
+
+        // reference data
+        let yref_f = xi.iter().map(|&e| f(e)).collect::<Vec<_>>();
+        let yref_df = xi.iter().map(|&e| df(e)).collect::<Vec<_>>();
+
+        // check accuracy with the maximum of the absolute error
+        let err_f = yi_f.iter().zip(yref_f.iter()).map(|(ei,ef)| (ei-ef).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap();
+        let err_df = yi_df.iter().zip(yref_df.iter()).map(|(ei,ef)| (ei-ef).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap();
+
+        println!("Error 0-th order derivative = {}",err_f);
+        println!("Error 1-st order derivative = {}",err_df);
+
+        assert_eq!(lag1_f.order(),na-1);
+        assert_eq!(lag1_df.order(),na-2);
+        assert_eq!(lag1_f.diff_order(),0);
+        assert_eq!(lag1_df.diff_order(),1);
+        assert!(err_f < 2.0*1e-6);
+        assert!(err_df < 2.0*1e-3);
     }
 
     #[test]

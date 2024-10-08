@@ -8,7 +8,7 @@ U: LagComplexTrait {
     lag1_eval(x1a,&ya.iter().map(|e| lag1_eval(x2a,e,x2)).collect::<Vec<U>>(),x1)
 }
 
-pub fn lag2_eval_grid<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: Vec<T>, x2: Vec<T>) -> Vec<U>
+pub fn lag2_eval_grid<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: &Vec<T>, x2: &Vec<T>) -> Vec<U>
 where 
 T: LagRealTrait,
 U: LagComplexTrait {
@@ -27,7 +27,7 @@ pub fn lag2_diff1<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: T, x2: 
 where 
 T: LagRealTrait,
 U: LagComplexTrait {
-    lag1_eval(x1a,&ya.iter().enumerate().map(|(idx,val)| U::from(partial_sum(x2a,x2,idx)).unwrap()*lag1_eval(x2a,val,x2)).collect::<Vec<U>>(),x1)
+    lag1_eval(x1a,&ya.iter().enumerate().map(|(idx,val)| U::from(partial_sum(x1a,x1,idx)).unwrap()*lag1_eval(x2a,val,x2)).collect::<Vec<U>>(),x1)
 }
 
 pub fn lag2_diff1_grid<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: &Vec<T>, x2: &Vec<T>) -> Vec<U>
