@@ -1,3 +1,6 @@
+use lagrange_interpolation::examples::*;
+
 fn main() {
-    println!("Hello, world!");
+    lag1_example_cosinus();
+    lag1_example_quadratic_function();
 }

@@ -121,8 +121,7 @@ mod lagrange1d_tests {
         // interpolation data
         let (a,b) = (0.0,1.0);
         let na = 20;
-        let stpa = (b-a)/((na-1) as f64);
-        let xa = (0..na).map(|i| (i as f64)*stpa).collect::<Vec<f64>>();
+        let xa = gauss_chebyshev_nodes(&na, &a, &b);
         let ya = xa.iter().map(|&x| f(x)).collect::<Vec<f64>>();
         let lag1_f = Lagrange1dInterpolator::new(xa,ya);
         let lag1_df = lag1_f.differentiate();
@@ -161,8 +160,7 @@ mod lagrange1d_tests {
         // interpolation data
         let (a,b) = (0.0,1.0);
         let na = 20;
-        let stpa = (b-a)/((na-1) as f64);
-        let xa = (0..na).map(|i| (i as f64)*stpa).collect::<Vec<f64>>();
+        let xa = gauss_chebyshev_nodes(&na, &a, &b);
         let ya = xa.iter().map(|&x| f(x)).collect::<Vec<_>>();
         let lag1_f = Lagrange1dInterpolator::new(xa,ya);
         let lag1_df = lag1_f.differentiate();

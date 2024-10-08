@@ -2,7 +2,7 @@ extern crate num_traits;
 extern crate num;
 
 use num::{cast::AsPrimitive,complex::*};
-use num_traits::{Float,zero,NumCast};
+use num_traits::{Float,zero,NumCast,one};
 use std::cmp::PartialOrd;
 use std::fmt::Display;
 use std::ops::AddAssign;
@@ -39,6 +39,17 @@ pub fn check_duplicate<T: LagRealTrait>(xa: &Vec<T>) {
     xac.sort_by(|a,b| a.partial_cmp(b).unwrap());
     let _ = (0..xac.len()-1).map(|i| {let val = (xac[i+1]-xac[i]).abs().as_(); if val < 1e-10 { panic!("'xa' has duplicated entries");
     } else {return val;}}).collect::<Vec<f64>>();
+}
+
+pub fn gauss_chebyshev_nodes<T: LagRealTrait>(n: &usize, a: &T, b: &T) -> Vec<T> where i32: AsPrimitive<T> {
+    (0..*n).map(|i| {
+        let x = -T::cos((T::acos(-one::<T>())*(i as i32).as_())/((*n-1) as i32).as_());
+        return rescale_range(a, b, &x);
+    }).collect::<Vec<_>>()
+}
+
+fn rescale_range<T: LagRealTrait>(a: &T, b: &T, x: &T) -> T where i32: AsPrimitive<T> {
+    return ((*b-*a)*(*x) + *a + *b)/(2.as_());
 }
 
 // TESTS
