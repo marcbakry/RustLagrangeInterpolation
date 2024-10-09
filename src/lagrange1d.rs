@@ -3,6 +3,7 @@ extern crate num_traits;
 use num_traits::zero;
 use num_traits::AsPrimitive;
 use std::fmt::{Debug,Display,Formatter,Result};
+use std::ops::{DivAssign, MulAssign};
 
 use super::utilities::*;
 use super::lag1_utilities::*;
@@ -17,7 +18,7 @@ pub struct Lagrange1dInterpolator<T,U> {
 impl<T,U> Lagrange1dInterpolator<T,U> where 
 T: LagRealTrait,
 i32: AsPrimitive<T>,
-U: LagComplexTrait {
+U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
     pub fn new(xa: Vec<T>, ya: Vec<U>) -> Lagrange1dInterpolator<T,U> {
         // check consistency
         if xa.len() != ya.len() {

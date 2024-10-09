@@ -2,6 +2,7 @@ extern crate num_traits;
 
 use num_traits::{zero,AsPrimitive};
 use std::fmt::{Debug,Display,Formatter,Result};
+use std::ops::{DivAssign, MulAssign};
 
 use super::utilities::*;
 use super::lag2_utilities::*;
@@ -19,7 +20,7 @@ impl<T,U> Lagrange2dInterpolator<T,U> where
 
 T: LagRealTrait,
 i32: AsPrimitive<T>,
-U: LagComplexTrait {
+U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
     pub fn new(x1a: Vec<T>, x2a: Vec<T>, ya: Vec<U>) -> Lagrange2dInterpolator<T,U> {
         // 
         if x1a.len()*x2a.len() != ya.len() {
