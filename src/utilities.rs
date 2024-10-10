@@ -24,10 +24,10 @@ pub fn argsort<T: PartialOrd>(x: &Vec<T>) -> Vec<usize> {
     return indices;
 }
 
-pub fn partial_sum<T: LagRealTrait>(xa: &Vec<T>, x: T, j: usize) -> T {
+pub fn partial_sum<T: LagRealTrait>(xa: &Vec<T>, x: &T, j: usize) -> T {
     (0..xa.len()).map(|i| {
         if i!=j {
-            return num_traits::one::<T>()/(x-xa[i]);
+            return num_traits::one::<T>()/(*x-xa[i]);
         } else {
             return num_traits::zero::<T>();
         }
@@ -82,7 +82,7 @@ pub mod utilities_tests {
         let x = 1.5;
         let j = 2;
 
-        let val = partial_sum(&xa, x, j);
+        let val = partial_sum(&xa, &x, j);
         assert!(Float::abs(val+0.4) < 1e-14);
     }
 

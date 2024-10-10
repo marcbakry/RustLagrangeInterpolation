@@ -17,7 +17,6 @@ pub struct Lagrange2dInterpolator<T,U> {
 }
 
 impl<T,U> Lagrange2dInterpolator<T,U> where 
-
 T: LagRealTrait,
 i32: AsPrimitive<T>,
 U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
@@ -68,7 +67,7 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
         (&(self.x1a),&(self.x2a),&(self.ya))
     }
 
-    pub fn eval(&self,x1: T, x2: T) -> U {
+    pub fn eval(&self,x1: &T, x2: &T) -> U {
         lag2_eval(&self.x1a, &self.x2a, &self.ya, x1, x2)
     }
 

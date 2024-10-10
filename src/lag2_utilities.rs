@@ -4,7 +4,7 @@ use super::lag1_utilities::*;
 use num_traits::zero;
 use std::ops::{DivAssign, MulAssign};
 
-pub fn lag2_eval<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: T, x2: T) -> U 
+pub fn lag2_eval<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: &T, x2: &T) -> U 
 where 
 T: LagRealTrait,
 U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
@@ -19,14 +19,14 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
     let mut res = vec![zero::<U>();x1.len()*x2.len()];
     for i1 in 0..x1.len() {
         for i2 in 0..x2.len() {
-            res[i1*x2.len()+i2] = lag2_eval(x1a,x2a,ya,x1[i1],x2[i2]);
+            res[i1*x2.len()+i2] = lag2_eval(x1a,x2a,ya,&x1[i1],&x2[i2]);
         }
     }
     // 
     return res;
 }
 
-pub fn lag2_diff1<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: T, x2: T) -> U 
+pub fn lag2_diff1<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: &T, x2: &T) -> U 
 where 
 T: LagRealTrait,
 U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
@@ -41,14 +41,14 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
     let mut res = Vec::with_capacity(x1.len()*x2.len());
     for i1 in 0..x1.len() {
         for i2 in 0..x2.len() {
-            res.push(lag2_diff1(x1a,x2a,ya,x1[i1],x2[i2]));
+            res.push(lag2_diff1(x1a,x2a,ya,&x1[i1],&x2[i2]));
         }
     }
     // 
     return res;
 }
 
-pub fn lag2_diff2<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: T, x2: T) -> U 
+pub fn lag2_diff2<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: &T, x2: &T) -> U 
 where 
 T: LagRealTrait,
 U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
@@ -65,7 +65,7 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
     let mut res = Vec::with_capacity(x1.len()*x2.len());
     for i1 in 0..x1.len() {
         for i2 in 0..x2.len() {
-            res.push(lag2_diff2(x1a,x2a,ya,x1[i1],x2[i2]));
+            res.push(lag2_diff2(x1a,x2a,ya,&x1[i1],&x2[i2]));
         }
     }
     // 

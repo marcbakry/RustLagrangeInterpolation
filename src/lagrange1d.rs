@@ -15,6 +15,24 @@ pub struct Lagrange1dInterpolator<T,U> {
     diff_order: usize
 }
 
+#[derive(Debug,Clone)]
+pub struct Lagrange1dInterpolatorVec<T,U> {
+    lag1_interps: Vec<Lagrange1dInterpolator<T,U>>
+}
+
+impl<T,U> Lagrange1dInterpolatorVec<T,U> where 
+T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
+    pub fn new(xa: Vec<T>, ya: Vec<Vec<U>>) -> Lagrange1dInterpolatorVec<T,U> {
+        return Lagrange1dInterpolatorVec { 
+            lag1_interps: ya.iter().map(|y| Lagrange1dInterpolator::new(xa.clone(), (*y).clone())).collect::<Vec<_>>() 
+        };
+    }
+
+    pub fn eval(&self, x: &T) -> Vec<U> {
+        return self.lag1_interps.iter().map(|interp| interp.eval(x)).collect::<Vec<U>>();
+    }
+}
+
 impl<T,U> Lagrange1dInterpolator<T,U> where 
 T: LagRealTrait,
 i32: AsPrimitive<T>,
@@ -60,12 +78,12 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
         (&(self.xa),&(self.ya))
     }
 
-    pub fn eval(&self, x: T) -> U {
+    pub fn eval(&self, x: &T) -> U {
         lag1_eval(&self.xa, &self.ya, x)
     }
 
     pub fn eval_vec(&self, x: &Vec<T>) -> Vec<U> {
-        lag1_eval_vec(&self.xa, &self.ya, x)
+        lag1_eval_vec(&self.xa, &self.ya, &x)
     }
 
     pub fn differentiate(&self) -> Lagrange1dInterpolator<T,U> {
