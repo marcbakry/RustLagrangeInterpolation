@@ -22,9 +22,12 @@ pub struct Lagrange1dInterpolatorVec<T,U> {
 
 impl<T,U> Lagrange1dInterpolatorVec<T,U> where 
 T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
-    pub fn new(xa: Vec<T>, ya: Vec<Vec<U>>) -> Lagrange1dInterpolatorVec<T,U> {
+    pub fn new(xa: Vec<Vec<T>>, ya: Vec<Vec<U>>) -> Lagrange1dInterpolatorVec<T,U> {
+        if xa.len() != ya.len() {
+            panic!("Error initializing the vector-field interpolator: inputs sizes do not match");
+        }
         return Lagrange1dInterpolatorVec { 
-            lag1_interps: ya.iter().map(|y| Lagrange1dInterpolator::new(xa.clone(), (*y).clone())).collect::<Vec<_>>() 
+            lag1_interps: ya.iter().zip(xa.iter()).map(|(y,x)| Lagrange1dInterpolator::new((*x).clone(), (*y).clone())).collect::<Vec<_>>() 
         };
     }
 
@@ -47,12 +50,12 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
         return self.lag1_interps.clone();
     }
 
-    pub fn order(&self) -> usize {
-        return self.lag1_interps[0].order();
+    pub fn order(&self) -> Vec<usize> {
+        return self.lag1_interps.iter().map(|interp| interp.order()).collect::<Vec<_>>();
     }
 
-    pub fn len(&self) -> usize {
-        return self.lag1_interps[0].len()
+    pub fn len(&self) -> Vec<usize> {
+        return self.lag1_interps.iter().map(|interp| interp.len()).collect::<Vec<_>>();
     }
 
     pub fn dim(&self) -> usize {

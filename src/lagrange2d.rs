@@ -23,14 +23,37 @@ pub struct Lagrange2dInterpolatorVec<T,U> {
 
 impl<T,U> Lagrange2dInterpolatorVec<T,U> where
 T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
-    pub fn new(x1a: Vec<T>, x2a: Vec<T>, ya: Vec<Vec<U>>) -> Lagrange2dInterpolatorVec<T,U> {
+    pub fn new(x1a: Vec<Vec<T>>, x2a: Vec<Vec<T>>, ya: Vec<Vec<U>>) -> Lagrange2dInterpolatorVec<T,U> {
+        if x1a.len() != x2a.len() || x1a.len() != ya.len() {
+            panic!("Error initializing the vector-field interpolator: inputs sizes do not match");
+        }
         return Lagrange2dInterpolatorVec { 
-            lag2_interps: ya.iter().map(|y| Lagrange2dInterpolator::new(x1a.clone(),x2a.clone(),(*y).clone())).collect::<Vec<_>>()
-        };
+            lag2_interps: ya.iter().zip(x1a.iter()).zip(x2a.iter()).map(|((y,x1),x2)| Lagrange2dInterpolator::new((*x1).clone(), (*x2).clone(), (*y).clone())).collect::<Vec<_>>()
+         };
     }
 
     pub fn eval(&self, x1: &T, x2: &T) -> Vec<U> {
         return self.lag2_interps.iter().map(|interp| interp.eval(x1, x2)).collect::<Vec<_>>();
+    }
+
+    pub fn eval_grid(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<Vec<U>>{
+        return self.lag2_interps.iter().map(|interp| interp.eval_grid(x1, x2)).collect::<Vec<_>>();
+    }
+
+    pub fn get_inner_interpolators(&self) -> Vec<Lagrange2dInterpolator<T,U>> {
+        return self.lag2_interps.clone();
+    }
+
+    pub fn order(&self) -> Vec<(usize,usize)> {
+        self.lag2_interps.iter().map(|interp| interp.order()).collect::<Vec<_>>()
+    }
+    
+    pub fn len(&self) -> Vec<(usize,usize)> {
+        self.lag2_interps.iter().map(|interp| interp.len()).collect::<Vec<_>>()
+    }
+
+    pub fn dim(&self) -> usize {
+        return self.lag2_interps.len();
     }
 }
 
