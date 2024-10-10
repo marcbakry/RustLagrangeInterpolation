@@ -31,6 +31,33 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
     pub fn eval(&self, x: &T) -> Vec<U> {
         return self.lag1_interps.iter().map(|interp| interp.eval(x)).collect::<Vec<U>>();
     }
+
+    pub fn eval_vec(&self, x: &Vec<T>) -> Vec<Vec<U>> {
+        // For each x-value, returns the value of all inner interpolators
+        return x.iter().map(|x| self.eval(x)).collect::<Vec<_>>();
+    }
+
+    pub fn differentiate(&self) -> Lagrange1dInterpolatorVec<T,U> {
+        return Lagrange1dInterpolatorVec {
+            lag1_interps: self.lag1_interps.iter().map(|interp| interp.differentiate()).collect::<Vec<_>>()
+        };
+    }
+
+    pub fn get_inner_interpolators(&self) -> Vec<Lagrange1dInterpolator<T, U>> {
+        return self.lag1_interps.clone();
+    }
+
+    pub fn order(&self) -> usize {
+        return self.lag1_interps[0].order();
+    }
+
+    pub fn len(&self) -> usize {
+        return self.lag1_interps[0].len()
+    }
+
+    pub fn dim(&self) -> usize {
+        return self.lag1_interps.len();
+    }
 }
 
 impl<T,U> Lagrange1dInterpolator<T,U> where 
