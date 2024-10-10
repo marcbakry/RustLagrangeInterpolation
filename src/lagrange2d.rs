@@ -40,6 +40,10 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
         return self.lag2_interps.iter().map(|interp| interp.eval_grid(x1, x2)).collect::<Vec<_>>();
     }
 
+    pub fn jacobian(&self) -> Vec<[Lagrange2dInterpolator<T,U>;2]> {
+        self.lag2_interps.iter().map(|interp| [interp.differentiate_x1(),interp.differentiate_x2()]).collect::<Vec<_>>()
+    }
+
     pub fn get_inner_interpolators(&self) -> Vec<Lagrange2dInterpolator<T,U>> {
         return self.lag2_interps.clone();
     }
