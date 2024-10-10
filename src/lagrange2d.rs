@@ -16,6 +16,24 @@ pub struct Lagrange2dInterpolator<T,U> {
     diff2_order: usize
 }
 
+#[derive(Debug,Clone)]
+pub struct Lagrange2dInterpolatorVec<T,U> {
+    lag2_interps: Vec<Lagrange2dInterpolator<T,U>>
+}
+
+impl<T,U> Lagrange2dInterpolatorVec<T,U> where
+T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
+    pub fn new(x1a: Vec<T>, x2a: Vec<T>, ya: Vec<Vec<U>>) -> Lagrange2dInterpolatorVec<T,U> {
+        return Lagrange2dInterpolatorVec { 
+            lag2_interps: ya.iter().map(|y| Lagrange2dInterpolator::new(x1a.clone(),x2a.clone(),(*y).clone())).collect::<Vec<_>>()
+        };
+    }
+
+    pub fn eval(&self, x1: &T, x2: &T) -> Vec<U> {
+        return self.lag2_interps.iter().map(|interp| interp.eval(x1, x2)).collect::<Vec<_>>();
+    }
+}
+
 impl<T,U> Lagrange2dInterpolator<T,U> where 
 T: LagRealTrait,
 i32: AsPrimitive<T>,
@@ -123,6 +141,10 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
             output.diff2_order = new_diff2_order;
             return output;
         }
+    }
+
+    pub fn gradient(&self) -> [Lagrange2dInterpolator<T,U>;2] {
+        return [self.differentiate_x1(),self.differentiate_x2()];
     }
 }
 
