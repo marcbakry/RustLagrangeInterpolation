@@ -120,6 +120,10 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
         lag2_eval_grid(&self.x1a, &self.x2a, &self.ya, x1, x2)
     }
 
+    pub fn eval_vec(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<U> {
+        lag2_eval_vec(&self.x1a, &self.x2a, &self.ya, x1, x2)
+    }
+
     pub fn differentiate_x1(&self) -> Lagrange2dInterpolator<T, U> {
         // 
         let (x1a,x2a, mut ya) = self.get_interp_data();

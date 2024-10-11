@@ -4,6 +4,8 @@ use num_traits::{zero,AsPrimitive};
 use std::fmt::{Debug,Display,Formatter,Result};
 use std::ops::{DivAssign, MulAssign};
 
+use crate::lag3_utilities::*;
+
 use super::utilities::*;
 
 #[derive(Debug,Clone)]
@@ -86,5 +88,17 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
 
     pub fn get_interp_data_ref(&self) -> (&Vec<T>,&Vec<T>,&Vec<T>,&Vec<Vec<Vec<U>>>) {
         (&(self.x1a),&(self.x2a),&(self.x3a),&(self.ya))
+    }
+
+    pub fn eval(&self, x1: &T, x2: &T, x3: &T) -> U {
+        lag3_eval(&self.x1a, &self.x2a, &self.x3a, &self.ya, x1, x2, x3)
+    }
+
+    pub fn eval_grid(&self, x1: &Vec<T>, x2: &Vec<T>, x3: &Vec<T>) -> Vec<U> {
+        lag3_eval_grid(&self.x1a, &self.x2a, &self.x3a, &self.ya, x1, x2,x3)
+    }
+
+    pub fn eval_vec(&self, x1: &Vec<T>, x2: &Vec<T>, x3: &Vec<T>) -> Vec<U> {
+        lag3_eval_vec(&self.x1a, &self.x2a, &self.x3a, &self.ya, x1, x2, x3)
     }
 }

@@ -7,8 +7,19 @@ use std::ops::{DivAssign, MulAssign};
 pub fn lag2_eval<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: &T, x2: &T) -> U 
 where 
 T: LagRealTrait,
-U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
+U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
     lag1_eval(x1a,&ya.iter().map(|e| lag1_eval(x2a,e,x2)).collect::<Vec<U>>(),x1)
+}
+
+pub fn lag2_eval_vec<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: &Vec<T>, x2: &Vec<T>) -> Vec<U>
+where 
+T: LagRealTrait,
+U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
+    // 
+    if x1.len() != x2.len() {
+        panic!("Input error: x1 and x2 should have the same length.");
+    }
+    return x1.iter().zip(x2.iter()).map(|(x,y)| lag2_eval(x1a, x2a, ya, x, y)).collect::<Vec<_>>();
 }
 
 pub fn lag2_eval_grid<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: &Vec<T>, x2: &Vec<T>) -> Vec<U>
