@@ -101,4 +101,24 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
     pub fn eval_vec(&self, x1: &Vec<T>, x2: &Vec<T>, x3: &Vec<T>) -> Vec<U> {
         lag3_eval_vec(&self.x1a, &self.x2a, &self.x3a, &self.ya, x1, x2, x3)
     }
+    
+    pub fn eval_arr(&self, x: &Vec<[T;3]>) -> Vec<U> {
+        x.iter().map(|e| lag3_eval(&self.x1a, &self.x2a, &self.x3a, &self.ya, &e[0], &e[1],&e[2])).collect::<Vec<_>>()
+    }
+
+    pub fn eval_tup(&self, x: &Vec<(T,T,T)>) -> Vec<U> {
+        x.iter().map(|e| lag3_eval(&self.x1a, &self.x2a, &self.x3a, &self.ya, &e.0, &e.1, &e.2)).collect::<Vec<_>>()
+    }
+
+    pub fn differentiate_x1(&self) {
+        // 
+    }
+
+    pub fn differentiate_x2(&self) {
+        // 
+    }
+
+    pub fn differentiate_x3(&self) {
+        // 
+    }
 }
