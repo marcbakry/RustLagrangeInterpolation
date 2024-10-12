@@ -110,15 +110,75 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
         x.iter().map(|e| lag3_eval(&self.x1a, &self.x2a, &self.x3a, &self.ya, &e.0, &e.1, &e.2)).collect::<Vec<_>>()
     }
 
-    pub fn differentiate_x1(&self) {
+    pub fn differentiate_x1(&self) -> Lagrange3dInterpolator<T, U> {
         // 
+        let (x1a,x2a,x3a,ya) = self.get_interp_data();
+        let new_diff1_order = self.diff1_order + 1;
+        // 
+        if self.x1a.len()-1 == 0 {
+            let n = x1a.len()*x2a.len()*x3a.len();
+            let mut zero_interp = Lagrange3dInterpolator::new(x1a, x2a, x3a, vec![zero::<U>(); n]);
+            zero_interp.diff1_order = new_diff1_order;
+            zero_interp.diff2_order = self.diff2_order;
+            zero_interp.diff3_order = self.diff3_order;
+            return zero_interp;
+        } else {
+            let x1a_new = midpoints(&x1a);
+            let ya_new = lag3_diff1_grid(&x1a, &x2a, &x3a, &ya, &x1a_new, &x2a, &x3a);
+
+            let mut output = Lagrange3dInterpolator::new(x1a_new,x2a,x3a,ya_new);
+            output.diff1_order = new_diff1_order;
+            output.diff2_order = self.diff2_order;
+            output.diff3_order = self.diff3_order;
+            return output;
+        }
     }
 
-    pub fn differentiate_x2(&self) {
+    pub fn differentiate_x2(&self) -> Lagrange3dInterpolator<T, U> {
         // 
+        let (x1a,x2a,x3a,ya) = self.get_interp_data();
+        let new_diff2_order = self.diff2_order + 1;
+        // 
+        if self.x2a.len()-1 == 0 {
+            let n = x1a.len()*x2a.len()*x3a.len();
+            let mut zero_interp = Lagrange3dInterpolator::new(x1a, x2a, x3a, vec![zero::<U>(); n]);
+            zero_interp.diff1_order = self.diff1_order;
+            zero_interp.diff2_order = new_diff2_order;
+            zero_interp.diff3_order = self.diff3_order;
+            return zero_interp;
+        } else {
+            let x2a_new = midpoints(&x2a);
+            let ya_new = lag3_diff2_grid(&x1a, &x2a, &x3a, &ya, &x1a, &x2a_new, &x3a);
+
+            let mut output = Lagrange3dInterpolator::new(x1a,x2a_new,x3a,ya_new);
+            output.diff1_order = self.diff1_order;
+            output.diff2_order = new_diff2_order;
+            output.diff3_order = self.diff3_order;
+            return output;
+        }
     }
 
-    pub fn differentiate_x3(&self) {
+    pub fn differentiate_x3(&self) -> Lagrange3dInterpolator<T, U> {
         // 
+        let (x1a,x2a,x3a,ya) = self.get_interp_data();
+        let new_diff3_order = self.diff3_order + 1;
+        // 
+        if self.x3a.len()-1 == 0 {
+            let n = x1a.len()*x2a.len()*x3a.len();
+            let mut zero_interp = Lagrange3dInterpolator::new(x1a, x2a, x3a, vec![zero::<U>(); n]);
+            zero_interp.diff1_order = self.diff1_order;
+            zero_interp.diff2_order = self.diff2_order;
+            zero_interp.diff3_order = new_diff3_order;
+            return zero_interp;
+        } else {
+            let x3a_new = midpoints(&x3a);
+            let ya_new = lag3_diff2_grid(&x1a, &x2a, &x3a, &ya, &x1a, &x2a, &x3a_new);
+
+            let mut output = Lagrange3dInterpolator::new(x1a,x2a,x3a_new,ya_new);
+            output.diff1_order = self.diff1_order;
+            output.diff2_order = self.diff2_order;
+            output.diff3_order = new_diff3_order;
+            return output;
+        }
     }
 }
