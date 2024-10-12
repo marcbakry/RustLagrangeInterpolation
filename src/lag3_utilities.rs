@@ -39,3 +39,28 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
     }
     return x1.iter().zip(x2.iter()).zip(x3.iter()).map(|((x,y),z)| lag3_eval(x1a, x2a, x3a, ya, x, y,z)).collect::<Vec<_>>();
 }
+
+pub fn lag3_diff1<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, x3a: &Vec<T>, ya: &Vec<Vec<Vec<U>>>, x1: &T, x2: &T, x3: &T) -> U 
+where 
+T: LagRealTrait,
+U: LagComplexTrait + DivAssign<T> + MulAssign<T> {    
+    lag1_eval(x1a, 
+        &ya.iter().enumerate().map(
+        |(idx,val)| U::from(partial_sum(x1a, x1, idx)).unwrap()*lag2_eval(x2a, x3a, val, x2, x3)
+    ).collect::<Vec<U>>(), 
+    x1)
+}
+
+pub fn lag3_diff2<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, x3a: &Vec<T>, ya: &Vec<Vec<Vec<U>>>, x1: &T, x2: &T, x3: &T) -> U 
+where 
+T: LagRealTrait,
+U: LagComplexTrait + DivAssign<T> + MulAssign<T> {  
+    lag1_eval(x1a, &ya.iter().map(|e| lag2_diff1(x2a, x3a, e, x2, x3)).collect::<Vec<U>>(), x1)
+}
+
+pub fn lag3_diff3<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, x3a: &Vec<T>, ya: &Vec<Vec<Vec<U>>>, x1: &T, x2: &T, x3: &T) -> U 
+where 
+T: LagRealTrait,
+U: LagComplexTrait + DivAssign<T> + MulAssign<T> {  
+    lag1_eval(x1a, &ya.iter().map(|e| lag2_diff2(x2a, x3a, e, x2, x3)).collect::<Vec<U>>(), x1)
+}
