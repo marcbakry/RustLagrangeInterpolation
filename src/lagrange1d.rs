@@ -41,6 +41,10 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
         // For each x-value, returns the value of all inner interpolators
         return x.iter().map(|x| self.eval(x)).collect::<Vec<_>>();
     }
+    
+    pub fn par_eval_vec(&self, x: &Vec<T>) -> Vec<Vec<U>>{
+        return (*x).par_iter().map(|xx| self.eval(xx)).collect::<Vec<_>>();
+    }
 
     pub fn differentiate(&self) -> Lagrange1dInterpolatorVec<T,U> {
         return Lagrange1dInterpolatorVec {

@@ -1,8 +1,5 @@
-use lagrange_interpolation::examples::*;
+use lagrange_interpolation::examples::run_all_examples;
 
 fn main() {
-    lag1_example_cosinus();
-    lag1_example_quadratic_function();
-    lag2_example();
-    lag1_parallel_example();
+    run_all_examples();
 }

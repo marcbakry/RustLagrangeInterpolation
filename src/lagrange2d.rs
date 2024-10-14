@@ -1,6 +1,7 @@
 extern crate num_traits;
 
 use num_traits::{zero,AsPrimitive};
+use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use std::fmt::{Debug,Display,Formatter,Result};
 use std::ops::{DivAssign, MulAssign};
 
@@ -123,13 +124,28 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
     pub fn eval_vec(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<U> {
         lag2_eval_vec(&self.x1a, &self.x2a, &self.ya, x1, x2)
     }
-
     pub fn eval_arr(&self, x: &Vec<[T;2]>) -> Vec<U> {
         x.iter().map(|e| lag2_eval(&self.x1a, &self.x2a, &self.ya, &e[0], &e[1])).collect::<Vec<_>>()
     }
 
     pub fn eval_tup(&self, x: &Vec<(T,T)>) -> Vec<U> {
         x.iter().map(|e| lag2_eval(&self.x1a, &self.x2a, &self.ya, &e.0, &e.1)).collect::<Vec<_>>()
+    }
+
+    pub fn par_eval_grid(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<U> {
+        (*x1).par_iter().flat_map_iter(|xx1| (*x2).iter().map(|xx2| self.eval(xx1, xx2))).collect::<Vec<_>>()
+    }
+
+    pub fn par_eval_vec(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<U> {
+        (*x1).par_iter().zip_eq((*x2).par_iter()).map(|(xx1,xx2)| self.eval(xx1,xx2)).collect::<Vec<U>>()
+    }
+
+    pub fn par_eval_arr(&self, x: &Vec<[T;2]>) -> Vec<U> {
+        (*x).par_iter().map(|&xx| self.eval(&xx[0], &xx[1])).collect::<Vec<U>>()
+    }
+
+    pub fn par_eval_tup(&self, x: &Vec<(T,T)>) -> Vec<U> {
+        (*x).par_iter().map(|&(x1,x2)| self.eval(&x1,&x2)).collect::<Vec<_>>()
     }
 
     pub fn differentiate_x1(&self) -> Lagrange2dInterpolator<T, U> {
