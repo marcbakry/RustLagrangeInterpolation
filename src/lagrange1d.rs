@@ -4,7 +4,7 @@ extern crate rayon;
 use num_traits::zero;
 use num_traits::AsPrimitive;
 use std::fmt::{Debug,Display,Formatter,Result};
-use std::ops::{DivAssign, MulAssign};
+use std::ops::{Div,DivAssign,Mul,MulAssign,Add,AddAssign,Sub,SubAssign};
 use rayon::prelude::*;
 
 use super::utilities::*;
@@ -164,6 +164,85 @@ impl<T: LagRealTrait,U: LagComplexTrait> Display for Lagrange1dInterpolator<T,U>
     }
 }
 
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Add<U> for Lagrange1dInterpolator<T,U> {
+    type Output = Lagrange1dInterpolator<T,U>;
+    fn add(self, rhs: U) -> Self::Output {
+        let mut new_self = self.clone();
+        for e in &mut new_self.ya {
+            *e = *e + rhs;
+        }
+        return new_self;
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> AddAssign<U> for Lagrange1dInterpolator<T,U> {
+    fn add_assign(&mut self, other: U) {
+        let mut new_self = self.clone();
+        for e in &mut new_self.ya {
+            *e = *e + other;
+        }
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Sub<U> for Lagrange1dInterpolator<T,U> {
+    type Output = Lagrange1dInterpolator<T,U>;
+    fn sub(self, rhs: U) -> Self::Output {
+        let mut new_self = self.clone();
+        for e in &mut new_self.ya {
+            *e = *e - rhs;
+        }
+        return new_self;
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> SubAssign<U> for Lagrange1dInterpolator<T,U> {
+    fn sub_assign(&mut self, other: U) {
+        let mut new_self = self.clone();
+        for e in &mut new_self.ya {
+            *e = *e - other;
+        }
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Mul<U> for Lagrange1dInterpolator<T,U> {
+    type Output = Lagrange1dInterpolator<T,U>;
+    fn mul(self, rhs: U) -> Self::Output {
+        let mut new_self = self.clone();
+        for e in &mut new_self.ya {
+            *e = (*e)*rhs;
+        }
+        return new_self;
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> MulAssign<U> for Lagrange1dInterpolator<T,U> {
+    fn mul_assign(&mut self, other: U) {
+        let mut new_self = self.clone();
+        for e in &mut new_self.ya {
+            *e = (*e)*other;
+        }
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Div<U> for Lagrange1dInterpolator<T,U> {
+    type Output = Lagrange1dInterpolator<T,U>;
+    fn div(self, rhs: U) -> Self::Output {
+        let mut new_self = self.clone();
+        for e in &mut new_self.ya {
+            *e = (*e)/rhs;
+        }
+        return new_self;
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> DivAssign<U> for Lagrange1dInterpolator<T,U> {
+    fn div_assign(&mut self, other: U) {
+        let mut new_self = self.clone();
+        for e in &mut new_self.ya {
+            *e = (*e)/other;
+        }
+    }
+}
 
 // TESTS
 #[cfg(test)]
