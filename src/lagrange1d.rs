@@ -1,9 +1,11 @@
 extern crate num_traits;
+extern crate rayon;
 
 use num_traits::zero;
 use num_traits::AsPrimitive;
 use std::fmt::{Debug,Display,Formatter,Result};
 use std::ops::{DivAssign, MulAssign};
+use rayon::prelude::*;
 
 use super::utilities::*;
 use super::lag1_utilities::*;
@@ -114,6 +116,10 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
 
     pub fn eval_vec(&self, x: &Vec<T>) -> Vec<U> {
         lag1_eval_vec(&self.xa, &self.ya, &x)
+    }
+
+    pub fn par_eval_vec(&self, x: &Vec<T>) -> Vec<U>{
+        return (*x).par_iter().map(|xx| self.eval(xx)).collect::<Vec<U>>();
     }
 
     pub fn differentiate(&self) -> Lagrange1dInterpolator<T,U> {

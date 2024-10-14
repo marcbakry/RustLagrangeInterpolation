@@ -3,8 +3,12 @@ use crate::lagrange2d::Lagrange2dInterpolator;
 use crate::utilities::gauss_chebyshev_nodes;
 use crate::plot_utilities::*;
 use std::f64::consts::PI;
+use std::time::Instant;
 
 pub fn lag1_example_cosinus() {
+    println!("+--------------------------------------+");
+    println!("| Running Lagrange 1d: COSINE FUNCTION |");
+    println!("+--------------------------------------+");
     // function and first derivative
     let f = |x: f64| f64::cos(2.0*PI*x.powi(2));
     let df = |x: f64| -4.0*PI*x*f64::sin(2.0*PI*x.powi(2));
@@ -31,9 +35,13 @@ pub fn lag1_example_cosinus() {
 
     let (xa_df,ya_df) = lag1_df.get_interp_data();
     lag1_compare_plot(&xi, &yref_df, &xi, &yi_df, &xa_df, &ya_df, String::from("Comparison df(x)/dx = -2 pi x sin(2 pi x^2)"));
+    println!("Done.");
 }
 
 pub fn lag1_example_quadratic_function() {
+    println!("+-----------------------------------------+");
+    println!("| Running Lagrange 1d: QUADRATIC FUNCTION |");
+    println!("+-----------------------------------------+");
     let f = |x: f64| x.powi(2);
     let df = |x: f64| 2.0*x;
     let ddf = |_: f64| 2.0;
@@ -73,9 +81,43 @@ pub fn lag1_example_quadratic_function() {
     
     let (xa_dddf,ya_dddf) = lag1_dddf.get_interp_data();
     lag1_compare_plot(&xi, &yref_dddf, &xi, &yi_dddf, &xa_dddf, &ya_dddf, String::from("Comparison d^3f(x)/dx^3 = 0.0"));
+
+    println!("Done.");
+}
+
+pub fn lag1_parallel_example() {
+    println!("+-----------------------------------+");
+    println!("| Running Lagrange 1d: SEQ. vs PAR. |");
+    println!("+-----------------------------------+");
+    // function and first derivative
+    let f = |x: f64| f64::cos(2.0*PI*x.powi(2));
+    // interpolation data
+    let (a,b) = (0.0,1.0);
+    let na = 20;
+    let xa_f = gauss_chebyshev_nodes(&na, &a, &b);
+    let ya_f = xa_f.iter().map(|&x| f(x)).collect::<Vec<f64>>();
+    let lag1_f = Lagrange1dInterpolator::new(xa_f.clone(),ya_f.clone());
+    // interpolated data
+    let ni = 10000000;
+    let stpi = (b-a)/(ni-1) as f64;
+    let xi = (0..ni).map(|i| i as f64*stpi).collect::<Vec<f64>>();
+    // 
+    let start = Instant::now();
+    let yi_f_seq = lag1_f.eval_vec(&xi);
+    let end_seq = start.elapsed().as_millis();
+    let start = Instant::now();
+    let yi_f_par = lag1_f.par_eval_vec(&xi);
+    let end_par = start.elapsed().as_millis();
+    println!("Time seq.: {} (ms)",end_seq);
+    println!("Time par.: {} (ms)",end_par);
+    println!("Speed-up : {}", (end_seq as  f64)/(end_par as f64));
+    println!("error seq/par   : {}", yi_f_par.iter().zip(yi_f_seq.iter()).map(|(a,b)| (a-b).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap());
 }
 
 pub fn lag2_example() {
+    println!("+------------------------------------+");
+    println!("| Running Lagrange 2d: WAVY FUNCTION |");
+    println!("+------------------------------------+");
     // 
     let f = |x1: f64, x2: f64| 1.0/(x2*x2+5.0)*x2.sin() + 1.0/(x1*x1+5.0)*x1.cos();
 
@@ -108,4 +150,5 @@ pub fn lag2_example() {
     lag2_surface_plot(&x1a, &x2a, &ya, String::from("Interpolation data"));
     lag2_surface_plot(&x1i, &x2i, &yi, String::from("Interpolated data"));
     lag2_surface_plot(&x1i, &x2i, &yref, String::from("Reference data"));
+    println!("Done.");
 }

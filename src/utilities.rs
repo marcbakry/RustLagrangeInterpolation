@@ -7,11 +7,11 @@ use std::cmp::PartialOrd;
 use std::fmt::Display;
 use std::ops::AddAssign;
 
-pub trait LagRealTrait: Copy+Float+AsPrimitive<f64>+PartialOrd+Display {}
-impl<T> LagRealTrait for T where T: Copy+Float+AsPrimitive<f64>+PartialOrd+Display {}
+pub trait LagRealTrait: 'static + Copy+Float+AsPrimitive<f64>+PartialOrd+Display+Send+Sync {}
+impl<T> LagRealTrait for T where T: 'static + Copy+Float+AsPrimitive<f64>+PartialOrd+Display+Send+Sync {}
 
-pub trait LagComplexTrait: NumCast + AddAssign + ComplexFloat {}
-impl<T> LagComplexTrait for T where T: NumCast + AddAssign + ComplexFloat, <T as ComplexFloat>::Real: Float {}
+pub trait LagComplexTrait: 'static + NumCast + AddAssign + ComplexFloat + Send + Sync {}
+impl<T> LagComplexTrait for T where T: 'static + NumCast + AddAssign + ComplexFloat + Send + Sync, <T as ComplexFloat>::Real: Float {}
 
 pub fn midpoints<T: LagRealTrait>(x: &Vec<T>)->Vec<T> where i32: AsPrimitive<T> {
     (0..(x.len()-1)).map(|i| (x[i] + x[i+1])/(2.as_())).collect()

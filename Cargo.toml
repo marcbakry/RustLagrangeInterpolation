@@ -7,6 +7,7 @@ edition = "2021"
 num = "*"
 num-traits = "*"
 plotly = "*"
+rayon = "*"
 
 [profile.release]
 debug=0
