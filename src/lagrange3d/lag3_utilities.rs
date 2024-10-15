@@ -1,6 +1,6 @@
-use super::utilities::{partial_sum,LagRealTrait,LagComplexTrait}; 
-use super::lag1_utilities::*;
-use super::lag2_utilities::*;
+use super::super::utilities::{partial_sum,LagRealTrait,LagComplexTrait}; 
+use crate::lagrange1d::lag1_utilities::*;
+use crate::lagrange2d::lag2_utilities::*;
 
 use num_traits::zero;
 use std::ops::{DivAssign, MulAssign};

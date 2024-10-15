@@ -1,4 +1,4 @@
-use super::utilities::{partial_sum,LagRealTrait,LagComplexTrait};
+use super::super::utilities::{partial_sum,LagRealTrait,LagComplexTrait};
 
 use num_traits::zero;
 use std::ops::{DivAssign, MulAssign};

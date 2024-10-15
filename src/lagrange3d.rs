@@ -1,10 +1,12 @@
 extern crate num_traits;
 
+pub mod lag3_utilities;
+
 use num_traits::{zero,AsPrimitive};
 use std::fmt::{Debug,Display,Formatter,Result};
 use std::ops::{DivAssign, MulAssign};
 
-use crate::lag3_utilities::*;
+use lag3_utilities::*;
 
 use super::utilities::*;
 
