@@ -115,3 +115,163 @@ pub fn lag2_duplicate_entries_x2a_input() {
     let ya: Vec<f64> = vec![1.0;6];
     let _lag2_f = Lagrange2dInterpolator::new(x1a, x2a, ya);
 }
+
+#[test]
+pub fn lag2_add_operators() {
+    let f1 = |x: f64, y: f64| f64::cos(2.0*PI*x)*f64::sin(PI*y);
+    let f2 = |x: f64, y: f64| 1.0 + x + 1.5*y - 3.0*x*y + x.powi(2)+f64::sqrt(2.0)*y.powi(2);
+    let f1plusf2 = |x: f64, y: f64| f1(x,y) + f2(x,y);
+    let (a,b) = (0.0,1.0);
+    let (n1,n2) = (10,3);
+    let x1 = gauss_chebyshev_nodes(&n1, &a, &b); 
+    let x2 = gauss_chebyshev_nodes(&n2, &a, &b);
+    // 
+    let ni = 50;
+    let xi = linspace(&ni, &a, &b);
+
+    // test add with matching x1a/x2a
+    let y1 = x1.iter().map(|x| x1.iter().map(|y| f1(*x,*y))).flatten().collect::<Vec<_>>();
+    let y2 = x1.iter().map(|x| x1.iter().map(|y| f2(*x,*y))).flatten().collect::<Vec<_>>();
+    let y12 = x1.iter().map(|x| x1.iter().map(|y| f1plusf2(*x,*y))).flatten().collect::<Vec<_>>();
+
+    let interp1 = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y1);
+    let interp2 = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y2);
+    let interp12 = interp1 + interp2;
+    let interp12_ref = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y12);
+    let (y_cal,y_ref) = (interp12.eval_grid(&xi, &xi),interp12_ref.eval_grid(&xi,&xi));
+    let err = y_cal.iter().zip(y_ref.iter()).map(|(&a,&b)| (a-b).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap();
+    assert!(err < 1e-14);
+
+    // test add with non-matching x1a or x2a
+    let y1 = x1.iter().map(|x| x1.iter().map(|y| f1(*x,*y))).flatten().collect::<Vec<_>>();
+    let y2 = x2.iter().map(|x| x2.iter().map(|y| f2(*x,*y))).flatten().collect::<Vec<_>>();
+    let y12 = x1.iter().map(|x| x1.iter().map(|y| f1plusf2(*x,*y))).flatten().collect::<Vec<_>>();
+
+    let interp1 = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y1);
+    let interp2 = Lagrange2dInterpolator::new(x2.clone(),x2.clone(),y2);
+    let interp12 = interp1 + interp2;
+    let interp12_ref = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y12);
+    let (y_cal,y_ref) = (interp12.eval_grid(&xi, &xi),interp12_ref.eval_grid(&xi,&xi));
+    let err = y_cal.iter().zip(y_ref.iter()).map(|(&a,&b)| (a-b).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap();
+    assert!(err < 1e-14);
+}
+
+#[test]
+pub fn lag2_sub_operators() {
+    let f1 = |x: f64, y: f64| f64::cos(2.0*PI*x)*f64::sin(PI*y);
+    let f2 = |x: f64, y: f64| 1.0 + x + 1.5*y - 3.0*x*y + x.powi(2)+f64::sqrt(2.0)*y.powi(2);
+    let f1plusf2 = |x: f64, y: f64| f1(x,y) - f2(x,y);
+    let (a,b) = (0.0,1.0);
+    let (n1,n2) = (10,3);
+    let x1 = gauss_chebyshev_nodes(&n1, &a, &b); 
+    let x2 = gauss_chebyshev_nodes(&n2, &a, &b);
+    // 
+    let ni = 50;
+    let xi = linspace(&ni, &a, &b);
+
+    // test add with matching x1a/x2a
+    let y1 = x1.iter().map(|x| x1.iter().map(|y| f1(*x,*y))).flatten().collect::<Vec<_>>();
+    let y2 = x1.iter().map(|x| x1.iter().map(|y| f2(*x,*y))).flatten().collect::<Vec<_>>();
+    let y12 = x1.iter().map(|x| x1.iter().map(|y| f1plusf2(*x,*y))).flatten().collect::<Vec<_>>();
+
+    let interp1 = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y1);
+    let interp2 = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y2);
+    let interp12 = interp1 - interp2;
+    let interp12_ref = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y12);
+    let (y_cal,y_ref) = (interp12.eval_grid(&xi, &xi),interp12_ref.eval_grid(&xi,&xi));
+    let err = y_cal.iter().zip(y_ref.iter()).map(|(&a,&b)| (a-b).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap();
+    assert!(err < 1e-14);
+
+    // test add with non-matching x1a or x2a
+    let y1 = x1.iter().map(|x| x1.iter().map(|y| f1(*x,*y))).flatten().collect::<Vec<_>>();
+    let y2 = x2.iter().map(|x| x2.iter().map(|y| f2(*x,*y))).flatten().collect::<Vec<_>>();
+    let y12 = x1.iter().map(|x| x1.iter().map(|y| f1plusf2(*x,*y))).flatten().collect::<Vec<_>>();
+
+    let interp1 = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y1);
+    let interp2 = Lagrange2dInterpolator::new(x2.clone(),x2.clone(),y2);
+    let interp12 = interp1 - interp2;
+    let interp12_ref = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y12);
+    let (y_cal,y_ref) = (interp12.eval_grid(&xi, &xi),interp12_ref.eval_grid(&xi,&xi));
+    let err = y_cal.iter().zip(y_ref.iter()).map(|(&a,&b)| (a-b).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap();
+    assert!(err < 1e-14);
+}
+
+#[test]
+pub fn lag2_mul_operators() {
+    let f1 = |x: f64, y: f64| f64::cos(2.0*PI*x)*f64::sin(PI*y);
+    let f2 = |x: f64, y: f64| 1.0 + x + 1.5*y - 3.0*x*y + x.powi(2)+f64::sqrt(2.0)*y.powi(2);
+    let f1plusf2 = |x: f64, y: f64| f1(x,y) * f2(x,y);
+    let (a,b) = (0.0,1.0);
+    let (n1,n2) = (10,3);
+    let x1 = gauss_chebyshev_nodes(&n1, &a, &b); 
+    let x2 = gauss_chebyshev_nodes(&n2, &a, &b);
+    // 
+    let ni = 50;
+    let xi = linspace(&ni, &a, &b);
+
+    // test add with matching x1a/x2a
+    let y1 = x1.iter().map(|x| x1.iter().map(|y| f1(*x,*y))).flatten().collect::<Vec<_>>();
+    let y2 = x1.iter().map(|x| x1.iter().map(|y| f2(*x,*y))).flatten().collect::<Vec<_>>();
+    let y12 = x1.iter().map(|x| x1.iter().map(|y| f1plusf2(*x,*y))).flatten().collect::<Vec<_>>();
+
+    let interp1 = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y1);
+    let interp2 = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y2);
+    let interp12 = interp1 * interp2;
+    let interp12_ref = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y12);
+    let (y_cal,y_ref) = (interp12.eval_grid(&xi, &xi),interp12_ref.eval_grid(&xi,&xi));
+    let err = y_cal.iter().zip(y_ref.iter()).map(|(&a,&b)| (a-b).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap();
+    assert!(err < 1e-14);
+
+    // test add with non-matching x1a or x2a
+    let y1 = x1.iter().map(|x| x1.iter().map(|y| f1(*x,*y))).flatten().collect::<Vec<_>>();
+    let y2 = x2.iter().map(|x| x2.iter().map(|y| f2(*x,*y))).flatten().collect::<Vec<_>>();
+    let y12 = x1.iter().map(|x| x1.iter().map(|y| f1plusf2(*x,*y))).flatten().collect::<Vec<_>>();
+
+    let interp1 = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y1);
+    let interp2 = Lagrange2dInterpolator::new(x2.clone(),x2.clone(),y2);
+    let interp12 = interp1 * interp2;
+    let interp12_ref = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y12);
+    let (y_cal,y_ref) = (interp12.eval_grid(&xi, &xi),interp12_ref.eval_grid(&xi,&xi));
+    let err = y_cal.iter().zip(y_ref.iter()).map(|(&a,&b)| (a-b).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap();
+    assert!(err < 1e-14);
+}
+
+#[test]
+pub fn lag2_div_operators() {
+    let f1 = |x: f64, y: f64| f64::cos(2.0*PI*x)*f64::sin(PI*y);
+    let f2 = |x: f64, y: f64| 1.0 + x + 1.5*y - 3.0*x*y + x.powi(2)+f64::sqrt(2.0)*y.powi(2);
+    let f1plusf2 = |x: f64, y: f64| f1(x,y) / f2(x,y);
+    let (a,b) = (0.0,1.0);
+    let (n1,n2) = (10,3);
+    let x1 = gauss_chebyshev_nodes(&n1, &a, &b); 
+    let x2 = gauss_chebyshev_nodes(&n2, &a, &b);
+    // 
+    let ni = 50;
+    let xi = linspace(&ni, &a, &b);
+
+    // test add with matching x1a/x2a
+    let y1 = x1.iter().map(|x| x1.iter().map(|y| f1(*x,*y))).flatten().collect::<Vec<_>>();
+    let y2 = x1.iter().map(|x| x1.iter().map(|y| f2(*x,*y))).flatten().collect::<Vec<_>>();
+    let y12 = x1.iter().map(|x| x1.iter().map(|y| f1plusf2(*x,*y))).flatten().collect::<Vec<_>>();
+
+    let interp1 = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y1);
+    let interp2 = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y2);
+    let interp12 = interp1 / interp2;
+    let interp12_ref = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y12);
+    let (y_cal,y_ref) = (interp12.eval_grid(&xi, &xi),interp12_ref.eval_grid(&xi,&xi));
+    let err = y_cal.iter().zip(y_ref.iter()).map(|(&a,&b)| (a-b).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap();
+    assert!(err < 1e-14);
+
+    // test add with non-matching x1a or x2a
+    let y1 = x1.iter().map(|x| x1.iter().map(|y| f1(*x,*y))).flatten().collect::<Vec<_>>();
+    let y2 = x2.iter().map(|x| x2.iter().map(|y| f2(*x,*y))).flatten().collect::<Vec<_>>();
+    let y12 = x1.iter().map(|x| x1.iter().map(|y| f1plusf2(*x,*y))).flatten().collect::<Vec<_>>();
+
+    let interp1 = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y1);
+    let interp2 = Lagrange2dInterpolator::new(x2.clone(),x2.clone(),y2);
+    let interp12 = interp1 / interp2;
+    let interp12_ref = Lagrange2dInterpolator::new(x1.clone(),x1.clone(),y12);
+    let (y_cal,y_ref) = (interp12.eval_grid(&xi, &xi),interp12_ref.eval_grid(&xi,&xi));
+    let err = y_cal.iter().zip(y_ref.iter()).map(|(&a,&b)| (a-b).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap();
+    assert!(err < 1e-14);
+}
