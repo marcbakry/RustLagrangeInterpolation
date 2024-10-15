@@ -203,8 +203,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Add<Lagr
 
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> AddAssign<U> for Lagrange1dInterpolator<T,U> {
     fn add_assign(&mut self, other: U) {
-        let mut new_self = self.clone();
-        for e in &mut new_self.ya {
+        for e in &mut self.ya {
             *e = *e + other;
         }
     }
@@ -247,8 +246,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Sub<Lagr
 
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> SubAssign<U> for Lagrange1dInterpolator<T,U> {
     fn sub_assign(&mut self, other: U) {
-        let mut new_self = self.clone();
-        for e in &mut new_self.ya {
+        for e in &mut self.ya {
             *e = *e - other;
         }
     }
@@ -291,8 +289,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Mul<Lagr
 
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> MulAssign<U> for Lagrange1dInterpolator<T,U> {
     fn mul_assign(&mut self, other: U) {
-        let mut new_self = self.clone();
-        for e in &mut new_self.ya {
+        for e in &mut self.ya {
             *e = (*e)*other;
         }
     }
@@ -335,9 +332,129 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Div<Lagr
 
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> DivAssign<U> for Lagrange1dInterpolator<T,U> {
     fn div_assign(&mut self, other: U) {
-        let mut new_self = self.clone();
-        for e in &mut new_self.ya {
+        for e in &mut self.ya {
             *e = (*e)/other;
+        }
+    }
+}
+
+// implementation of the basic operators for Lagrange1dInterpolatorVec
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Add<U> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange1dInterpolatorVec<T,U>;
+
+    fn add(self, rhs: U) -> Self::Output {
+        return Lagrange1dInterpolatorVec{
+            lag1_interps: self.get_inner_interpolators().iter().map(|interp| interp.clone() + rhs).collect::<Vec<_>>()
+        };
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Add<Lagrange1dInterpolatorVec<T,U>> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange1dInterpolatorVec<T,U>;
+
+    fn add(self, rhs: Lagrange1dInterpolatorVec<T,U>) -> Self::Output {
+        let lhs = self.get_inner_interpolators();
+        let rhs = rhs.get_inner_interpolators();
+        return Lagrange1dInterpolatorVec{
+            lag1_interps: lhs.iter().zip(rhs.iter()).map(|(i1,i2)| i1.clone()+i2.clone()).collect::<Vec<_>>()
+        };
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> AddAssign<U> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+    fn add_assign(&mut self, other: U) {
+        for e in &mut self.lag1_interps {
+            *e += other;
+        }
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Sub<U> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange1dInterpolatorVec<T,U>;
+
+    fn sub(self, rhs: U) -> Self::Output {
+        return Lagrange1dInterpolatorVec{
+            lag1_interps: self.get_inner_interpolators().iter().map(|interp| interp.clone() - rhs).collect::<Vec<_>>()
+        };
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Sub<Lagrange1dInterpolatorVec<T,U>> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange1dInterpolatorVec<T,U>;
+
+    fn sub(self, rhs: Lagrange1dInterpolatorVec<T,U>) -> Self::Output {
+        let lhs = self.get_inner_interpolators();
+        let rhs = rhs.get_inner_interpolators();
+        return Lagrange1dInterpolatorVec{
+            lag1_interps: lhs.iter().zip(rhs.iter()).map(|(i1,i2)| i1.clone()-i2.clone()).collect::<Vec<_>>()
+        };
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> SubAssign<U> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+    fn sub_assign(&mut self, other: U) {
+        for e in &mut self.lag1_interps {
+            *e -= other;
+        }
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Mul<U> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange1dInterpolatorVec<T,U>;
+
+    fn mul(self, rhs: U) -> Self::Output {
+        return Lagrange1dInterpolatorVec{
+            lag1_interps: self.get_inner_interpolators().iter().map(|interp| interp.clone()*rhs).collect::<Vec<_>>()
+        };
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Mul<Lagrange1dInterpolatorVec<T,U>> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange1dInterpolatorVec<T,U>;
+
+    fn mul(self, rhs: Lagrange1dInterpolatorVec<T,U>) -> Self::Output {
+        let lhs = self.get_inner_interpolators();
+        let rhs = rhs.get_inner_interpolators();
+        return Lagrange1dInterpolatorVec{
+            lag1_interps: lhs.iter().zip(rhs.iter()).map(|(i1,i2)| i1.clone()*i2.clone()).collect::<Vec<_>>()
+        };
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> MulAssign<U> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+    fn mul_assign(&mut self, other: U) {
+        for e in &mut self.lag1_interps {
+            *e *= other;
+        }
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Div<U> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange1dInterpolatorVec<T,U>;
+
+    fn div(self, rhs: U) -> Self::Output {
+        return Lagrange1dInterpolatorVec{
+            lag1_interps: self.get_inner_interpolators().iter().map(|interp| interp.clone()/rhs).collect::<Vec<_>>()
+        };
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Div<Lagrange1dInterpolatorVec<T,U>> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange1dInterpolatorVec<T,U>;
+
+    fn div(self, rhs: Lagrange1dInterpolatorVec<T,U>) -> Self::Output {
+        let lhs = self.get_inner_interpolators();
+        let rhs = rhs.get_inner_interpolators();
+        return Lagrange1dInterpolatorVec{
+            lag1_interps: lhs.iter().zip(rhs.iter()).map(|(i1,i2)| i1.clone()/i2.clone()).collect::<Vec<_>>()
+        };
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> DivAssign<U> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+    fn div_assign(&mut self, other: U) {
+        for e in &mut self.lag1_interps {
+            *e /= other;
         }
     }
 }
