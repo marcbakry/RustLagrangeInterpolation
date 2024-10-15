@@ -5,7 +5,7 @@ pub mod lag2_utilities;
 use num_traits::{zero,AsPrimitive};
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use std::fmt::{Debug,Display,Formatter,Result};
-use std::ops::{DivAssign, MulAssign};
+use std::ops::{Div,DivAssign,Mul,MulAssign,Add,AddAssign,Sub,SubAssign};
 
 use super::utilities::*;
 use lag2_utilities::*;
@@ -208,6 +208,222 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
 impl<T: LagRealTrait, U: LagComplexTrait> Display for Lagrange2dInterpolator<T,U> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f,"Lagrange 2d gridded interpolator:\n- length = {} x {}\n- differentiation order = ({},{})",self.x1a.len(),self.x2a.len(),self.diff1_order,self.diff2_order)
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Add<U> for Lagrange2dInterpolator<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange2dInterpolator<T,U>;
+    fn add(self, rhs: U) -> Self::Output {
+        let (x1a,x2a,ya) = self.get_interp_data();
+        let new_ya = ya.iter().flat_map(|y| y.iter()).map(|&e| e-rhs).collect::<Vec<_>>();
+        return Lagrange2dInterpolator::new(x1a, x2a, new_ya);
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Add<Lagrange2dInterpolator<T,U>> for Lagrange2dInterpolator<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange2dInterpolator<T,U>;
+    fn add(self, rhs: Lagrange2dInterpolator<T,U>) -> Self::Output {
+        let (x1a_lhs,x2a_lhs,ya_lhs) = self.get_interp_data();
+        let (x1a_rhs,x2a_rhs,ya_rhs) = rhs.get_interp_data();
+        
+        let is_same_x1a = x1a_lhs.iter().zip(x1a_rhs.iter()).any(|(&a,&b)| (a-b).abs() > T::from(1e-12).unwrap()) && (x1a_lhs.len() == x1a_rhs.len());
+        let is_same_x2a = x2a_lhs.iter().zip(x2a_rhs.iter()).any(|(&a,&b)| (a-b).abs() > T::from(1e-12).unwrap()) && (x2a_lhs.len() == x1a_rhs.len());
+
+        // flatten y
+        let ya_lhs = ya_lhs.iter().flat_map(|e| e.iter()).map(|&e| e).collect::<Vec<_>>();
+        let ya_rhs = ya_rhs.iter().flat_map(|e| e.iter()).map(|&e| e).collect::<Vec<_>>();
+
+        let (x1a_new,x2a_new,ya_new) = if is_same_x1a && is_same_x2a {
+            (x1a_lhs,x2a_lhs,ya_lhs.iter().zip(ya_rhs.iter()).map(|(&a,&b)| a+b).collect::<Vec<_>>())
+        } else {
+            let x1a_new = if x1a_lhs.len() > x1a_rhs.len() {
+                x1a_lhs
+            } else {
+                x1a_rhs
+            };
+            let x2a_new = if x2a_lhs.len() > x2a_rhs.len() {
+                x2a_lhs
+            } else {
+                x2a_rhs
+            };
+            let ya_lhs = self.eval_grid(&x1a_new, &x2a_new);
+            let ya_rhs = rhs.eval_grid(&x1a_new, &x2a_new);
+            let ya_new = ya_lhs.iter().zip(ya_rhs.iter()).map(|(&a,&b)| a+b).collect::<Vec<_>>();
+            (x1a_new,x2a_new,ya_new)
+        };
+        return Lagrange2dInterpolator::new(x1a_new,x2a_new,ya_new);
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> AddAssign<U> for Lagrange2dInterpolator<T,U> where i32: AsPrimitive<T> {
+    fn add_assign(&mut self, rhs: U) {
+        for y in &mut self.ya {
+            for yy in y {
+                *yy = *yy + rhs;
+            }
+        }
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Sub<U> for Lagrange2dInterpolator<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange2dInterpolator<T,U>;
+    fn sub(self, rhs: U) -> Self::Output {
+        let (x1a,x2a,ya) = self.get_interp_data();
+        let new_ya = ya.iter().flat_map(|y| y.iter()).map(|&e| e - rhs).collect::<Vec<_>>();
+        return Lagrange2dInterpolator::new(x1a, x2a, new_ya);
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Sub<Lagrange2dInterpolator<T,U>> for Lagrange2dInterpolator<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange2dInterpolator<T,U>;
+    fn sub(self, rhs: Lagrange2dInterpolator<T,U>) -> Self::Output {
+        let (x1a_lhs,x2a_lhs,ya_lhs) = self.get_interp_data();
+        let (x1a_rhs,x2a_rhs,ya_rhs) = rhs.get_interp_data();
+        
+        let is_same_x1a = x1a_lhs.iter().zip(x1a_rhs.iter()).any(|(&a,&b)| (a-b).abs() > T::from(1e-12).unwrap()) && (x1a_lhs.len() == x1a_rhs.len());
+        let is_same_x2a = x2a_lhs.iter().zip(x2a_rhs.iter()).any(|(&a,&b)| (a-b).abs() > T::from(1e-12).unwrap()) && (x2a_lhs.len() == x1a_rhs.len());
+
+        // flatten y
+        let ya_lhs = ya_lhs.iter().flat_map(|e| e.iter()).map(|&e| e).collect::<Vec<_>>();
+        let ya_rhs = ya_rhs.iter().flat_map(|e| e.iter()).map(|&e| e).collect::<Vec<_>>();
+
+        let (x1a_new,x2a_new,ya_new) = if is_same_x1a && is_same_x2a {
+            (x1a_lhs,x2a_lhs,ya_lhs.iter().zip(ya_rhs.iter()).map(|(&a,&b)| a-b).collect::<Vec<_>>())
+        } else {
+            let x1a_new = if x1a_lhs.len() > x1a_rhs.len() {
+                x1a_lhs
+            } else {
+                x1a_rhs
+            };
+            let x2a_new = if x2a_lhs.len() > x2a_rhs.len() {
+                x2a_lhs
+            } else {
+                x2a_rhs
+            };
+            let ya_lhs = self.eval_grid(&x1a_new, &x2a_new);
+            let ya_rhs = rhs.eval_grid(&x1a_new, &x2a_new);
+            let ya_new = ya_lhs.iter().zip(ya_rhs.iter()).map(|(&a,&b)| a-b).collect::<Vec<_>>();
+            (x1a_new,x2a_new,ya_new)
+        };
+        return Lagrange2dInterpolator::new(x1a_new,x2a_new,ya_new);
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> SubAssign<U> for Lagrange2dInterpolator<T,U> where i32: AsPrimitive<T> {
+    fn sub_assign(&mut self, rhs: U) {
+        for y in &mut self.ya {
+            for yy in y {
+                *yy = *yy - rhs;
+            }
+        }
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Mul<U> for Lagrange2dInterpolator<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange2dInterpolator<T,U>;
+    fn mul(self, rhs: U) -> Self::Output {
+        let (x1a,x2a,ya) = self.get_interp_data();
+        let new_ya = ya.iter().flat_map(|y| y.iter()).map(|&e| e*rhs).collect::<Vec<_>>();
+        return Lagrange2dInterpolator::new(x1a, x2a, new_ya);
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Mul<Lagrange2dInterpolator<T,U>> for Lagrange2dInterpolator<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange2dInterpolator<T,U>;
+    fn mul(self, rhs: Lagrange2dInterpolator<T,U>) -> Self::Output {
+        let (x1a_lhs,x2a_lhs,ya_lhs) = self.get_interp_data();
+        let (x1a_rhs,x2a_rhs,ya_rhs) = rhs.get_interp_data();
+        
+        let is_same_x1a = x1a_lhs.iter().zip(x1a_rhs.iter()).any(|(&a,&b)| (a-b).abs() > T::from(1e-12).unwrap()) && (x1a_lhs.len() == x1a_rhs.len());
+        let is_same_x2a = x2a_lhs.iter().zip(x2a_rhs.iter()).any(|(&a,&b)| (a-b).abs() > T::from(1e-12).unwrap()) && (x2a_lhs.len() == x1a_rhs.len());
+
+        // flatten y
+        let ya_lhs = ya_lhs.iter().flat_map(|e| e.iter()).map(|&e| e).collect::<Vec<_>>();
+        let ya_rhs = ya_rhs.iter().flat_map(|e| e.iter()).map(|&e| e).collect::<Vec<_>>();
+
+        let (x1a_new,x2a_new,ya_new) = if is_same_x1a && is_same_x2a {
+            (x1a_lhs,x2a_lhs,ya_lhs.iter().zip(ya_rhs.iter()).map(|(&a,&b)| a*b).collect::<Vec<_>>())
+        } else {
+            let x1a_new = if x1a_lhs.len() > x1a_rhs.len() {
+                x1a_lhs
+            } else {
+                x1a_rhs
+            };
+            let x2a_new = if x2a_lhs.len() > x2a_rhs.len() {
+                x2a_lhs
+            } else {
+                x2a_rhs
+            };
+            let ya_lhs = self.eval_grid(&x1a_new, &x2a_new);
+            let ya_rhs = rhs.eval_grid(&x1a_new, &x2a_new);
+            let ya_new = ya_lhs.iter().zip(ya_rhs.iter()).map(|(&a,&b)| a*b).collect::<Vec<_>>();
+            (x1a_new,x2a_new,ya_new)
+        };
+        return Lagrange2dInterpolator::new(x1a_new,x2a_new,ya_new);
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> MulAssign<U> for Lagrange2dInterpolator<T,U> where i32: AsPrimitive<T> {
+    fn mul_assign(&mut self, rhs: U) {
+        for y in &mut self.ya {
+            for yy in y {
+                *yy = *yy * rhs;
+            }
+        }
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Div<U> for Lagrange2dInterpolator<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange2dInterpolator<T,U>;
+    fn div(self, rhs: U) -> Self::Output {
+        let (x1a,x2a,ya) = self.get_interp_data();
+        let new_ya = ya.iter().flat_map(|y| y.iter()).map(|&e| e/rhs).collect::<Vec<_>>();
+        return Lagrange2dInterpolator::new(x1a, x2a, new_ya);
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Div<Lagrange2dInterpolator<T,U>> for Lagrange2dInterpolator<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange2dInterpolator<T,U>;
+    fn div(self, rhs: Lagrange2dInterpolator<T,U>) -> Self::Output {
+        let (x1a_lhs,x2a_lhs,ya_lhs) = self.get_interp_data();
+        let (x1a_rhs,x2a_rhs,ya_rhs) = rhs.get_interp_data();
+        
+        let is_same_x1a = x1a_lhs.iter().zip(x1a_rhs.iter()).any(|(&a,&b)| (a-b).abs() > T::from(1e-12).unwrap()) && (x1a_lhs.len() == x1a_rhs.len());
+        let is_same_x2a = x2a_lhs.iter().zip(x2a_rhs.iter()).any(|(&a,&b)| (a-b).abs() > T::from(1e-12).unwrap()) && (x2a_lhs.len() == x1a_rhs.len());
+
+        // flatten y
+        let ya_lhs = ya_lhs.iter().flat_map(|e| e.iter()).map(|&e| e).collect::<Vec<_>>();
+        let ya_rhs = ya_rhs.iter().flat_map(|e| e.iter()).map(|&e| e).collect::<Vec<_>>();
+
+        let (x1a_new,x2a_new,ya_new) = if is_same_x1a && is_same_x2a {
+            (x1a_lhs,x2a_lhs,ya_lhs.iter().zip(ya_rhs.iter()).map(|(&a,&b)| a/b).collect::<Vec<_>>())
+        } else {
+            let x1a_new = if x1a_lhs.len() > x1a_rhs.len() {
+                x1a_lhs
+            } else {
+                x1a_rhs
+            };
+            let x2a_new = if x2a_lhs.len() > x2a_rhs.len() {
+                x2a_lhs
+            } else {
+                x2a_rhs
+            };
+            let ya_lhs = self.eval_grid(&x1a_new, &x2a_new);
+            let ya_rhs = rhs.eval_grid(&x1a_new, &x2a_new);
+            let ya_new = ya_lhs.iter().zip(ya_rhs.iter()).map(|(&a,&b)| a/b).collect::<Vec<_>>();
+            (x1a_new,x2a_new,ya_new)
+        };
+        return Lagrange2dInterpolator::new(x1a_new,x2a_new,ya_new);
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> DivAssign<U> for Lagrange2dInterpolator<T,U> where i32: AsPrimitive<T> {
+    fn div_assign(&mut self, rhs: U) {
+        for y in &mut self.ya {
+            for yy in y {
+                *yy = *yy / rhs;
+            }
+        }
     }
 }
 
