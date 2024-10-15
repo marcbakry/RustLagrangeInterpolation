@@ -48,6 +48,11 @@ pub fn gauss_chebyshev_nodes<T: LagRealTrait>(n: &usize, a: &T, b: &T) -> Vec<T>
     }).collect::<Vec<_>>()
 }
 
+pub fn linspace<T:LagRealTrait>(n: &usize, a:&T, b: &T) -> Vec<T> {
+    let stp = (*b-*a)/(T::from(*n-1).unwrap());
+    (0..*n).map(|i| *a + T::from(i).unwrap()*stp).collect::<Vec<_>>()
+}
+
 fn rescale_range<T: LagRealTrait>(a: &T, b: &T, x: &T) -> T where i32: AsPrimitive<T> {
     return ((*b-*a)*(*x) + *a + *b)/(2.as_());
 }

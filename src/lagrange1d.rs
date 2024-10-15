@@ -175,6 +175,30 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Add<U> f
     }
 }
 
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Add<Lagrange1dInterpolator<T,U>> for Lagrange1dInterpolator<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange1dInterpolator<T,U>;
+    fn add(self, rhs: Lagrange1dInterpolator<T,U>) -> Self::Output {
+        let (xa_lhs,ya_lhs) = self.get_interp_data();
+        let (xa_rhs,ya_rhs) = rhs.get_interp_data();
+        let is_same = xa_lhs.iter().zip(xa_rhs.iter()).any(|(&a,&b)| (a-b).abs() > T::from(1e-12).unwrap()) && (xa_lhs.len() == xa_rhs.len());
+        if is_same { // if same interpolation nodes
+            let new_ya = ya_lhs.iter().zip(ya_rhs.iter()).map(|(&a,&b)| a+b).collect::<Vec<_>>();
+            return Lagrange1dInterpolator::new(xa_lhs, new_ya);
+        } else { // if different, interpolation on for the interpolator with the more nodes
+            let (new_xa,new_ya) = if self.len() > rhs.len() {
+                let rhs_val = rhs.eval_vec(&xa_lhs);
+                let new_ya = rhs_val.iter().zip(ya_lhs.iter()).map(|(&a,&b)| a+b).collect::<Vec<_>>();
+                (xa_lhs,new_ya)
+            } else {
+                let lhs_val = self.eval_vec(&xa_rhs);
+                let new_ya = lhs_val.iter().zip(ya_rhs.iter()).map(|(&a,&b)| a+b).collect::<Vec<_>>();
+                (xa_rhs,new_ya)
+            };
+            return Lagrange1dInterpolator::new(new_xa,new_ya);
+        }
+    }
+}
+
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> AddAssign<U> for Lagrange1dInterpolator<T,U> {
     fn add_assign(&mut self, other: U) {
         let mut new_self = self.clone();
@@ -192,6 +216,30 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Sub<U> f
             *e = *e - rhs;
         }
         return new_self;
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Sub<Lagrange1dInterpolator<T,U>> for Lagrange1dInterpolator<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange1dInterpolator<T,U>;
+    fn sub(self, rhs: Lagrange1dInterpolator<T,U>) -> Self::Output {
+        let (xa_lhs,ya_lhs) = self.get_interp_data();
+        let (xa_rhs,ya_rhs) = rhs.get_interp_data();
+        let is_same = xa_lhs.iter().zip(xa_rhs.iter()).any(|(&a,&b)| (a-b).abs() > T::from(1e-12).unwrap()) && (xa_lhs.len() == xa_rhs.len());
+        if is_same { // if same interpolation nodes
+            let new_ya = ya_lhs.iter().zip(ya_rhs.iter()).map(|(&a,&b)| a-b).collect::<Vec<_>>();
+            return Lagrange1dInterpolator::new(xa_lhs, new_ya);
+        } else { // if different, interpolation on for the interpolator with the more nodes
+            let (new_xa,new_ya) = if self.len() > rhs.len() {
+                let rhs_val = rhs.eval_vec(&xa_lhs);
+                let new_ya = rhs_val.iter().zip(ya_lhs.iter()).map(|(&a,&b)| b-a).collect::<Vec<_>>();
+                (xa_lhs,new_ya)
+            } else {
+                let lhs_val = self.eval_vec(&xa_rhs);
+                let new_ya = lhs_val.iter().zip(ya_rhs.iter()).map(|(&a,&b)| a-b).collect::<Vec<_>>();
+                (xa_rhs,new_ya)
+            };
+            return Lagrange1dInterpolator::new(new_xa,new_ya);
+        }
     }
 }
 
@@ -215,6 +263,30 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Mul<U> f
     }
 }
 
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Mul<Lagrange1dInterpolator<T,U>> for Lagrange1dInterpolator<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange1dInterpolator<T,U>;
+    fn mul(self, rhs: Lagrange1dInterpolator<T,U>) -> Self::Output {
+        let (xa_lhs,ya_lhs) = self.get_interp_data();
+        let (xa_rhs,ya_rhs) = rhs.get_interp_data();
+        let is_same = xa_lhs.iter().zip(xa_rhs.iter()).any(|(&a,&b)| (a-b).abs() > T::from(1e-12).unwrap()) && (xa_lhs.len() == xa_rhs.len());
+        if is_same { // if same interpolation nodes
+            let new_ya = ya_lhs.iter().zip(ya_rhs.iter()).map(|(&a,&b)| a*b).collect::<Vec<_>>();
+            return Lagrange1dInterpolator::new(xa_lhs, new_ya);
+        } else { // if different, interpolation on for the interpolator with the more nodes
+            let (new_xa,new_ya) = if self.len() > rhs.len() {
+                let rhs_val = rhs.eval_vec(&xa_lhs);
+                let new_ya = rhs_val.iter().zip(ya_lhs.iter()).map(|(&a,&b)| a*b).collect::<Vec<_>>();
+                (xa_lhs,new_ya)
+            } else {
+                let lhs_val = self.eval_vec(&xa_rhs);
+                let new_ya = lhs_val.iter().zip(ya_rhs.iter()).map(|(&a,&b)| a*b).collect::<Vec<_>>();
+                (xa_rhs,new_ya)
+            };
+            return Lagrange1dInterpolator::new(new_xa,new_ya);
+        }
+    }
+}
+
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> MulAssign<U> for Lagrange1dInterpolator<T,U> {
     fn mul_assign(&mut self, other: U) {
         let mut new_self = self.clone();
@@ -232,6 +304,30 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Div<U> f
             *e = (*e)/rhs;
         }
         return new_self;
+    }
+}
+
+impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Div<Lagrange1dInterpolator<T,U>> for Lagrange1dInterpolator<T,U> where i32: AsPrimitive<T> {
+    type Output = Lagrange1dInterpolator<T,U>;
+    fn div(self, rhs: Lagrange1dInterpolator<T,U>) -> Self::Output {
+        let (xa_lhs,ya_lhs) = self.get_interp_data();
+        let (xa_rhs,ya_rhs) = rhs.get_interp_data();
+        let is_same = xa_lhs.iter().zip(xa_rhs.iter()).any(|(&a,&b)| (a-b).abs() > T::from(1e-12).unwrap()) && (xa_lhs.len() == xa_rhs.len());
+        if is_same { // if same interpolation nodes
+            let new_ya = ya_lhs.iter().zip(ya_rhs.iter()).map(|(&a,&b)| a/b).collect::<Vec<_>>();
+            return Lagrange1dInterpolator::new(xa_lhs, new_ya);
+        } else { // if different, interpolation on for the interpolator with the more nodes
+            let (new_xa,new_ya) = if self.len() > rhs.len() {
+                let rhs_val = rhs.eval_vec(&xa_lhs);
+                let new_ya = rhs_val.iter().zip(ya_lhs.iter()).map(|(&a,&b)| b/a).collect::<Vec<_>>();
+                (xa_lhs,new_ya)
+            } else {
+                let lhs_val = self.eval_vec(&xa_rhs);
+                let new_ya = lhs_val.iter().zip(ya_rhs.iter()).map(|(&a,&b)| a/b).collect::<Vec<_>>();
+                (xa_rhs,new_ya)
+            };
+            return Lagrange1dInterpolator::new(new_xa,new_ya);
+        }
     }
 }
 
@@ -361,5 +457,145 @@ mod lagrange1d_tests {
         let xa: Vec<f64> = vec![0.0; 3];
         let ya: Vec<f64> = xa.clone();
         let _lag1_f = Lagrange1dInterpolator::new(xa,ya);
+    }
+
+    #[test]
+    pub fn lag1_add_operators() {
+        // 
+        let f1 = |x: f64| f64::cos(2.0*PI*x);
+        let f2 = |x: f64| x.powf(1.5);
+        let f1plusf2 = |x: f64| f1(x) + f2(x);
+        let (a,b) = (0.0,1.0);
+        let (nm,np) = (9,10);
+        let (xm,xp) = (gauss_chebyshev_nodes(&nm, &a, &b),gauss_chebyshev_nodes(&np, &a, &b));
+        // 
+        let ni = 100;
+        let xi = linspace(&ni, &a, &b);
+
+        // test add with same xa == xp
+        let (y1,y2): (Vec<f64>,Vec<f64>) = xp.iter().map(|&x| (f1(x),f2(x))).unzip();
+        let y12 = xp.iter().map(|&x| f1plusf2(x)).collect::<Vec<_>>();
+        let interp1 = Lagrange1dInterpolator::new(xp.clone(), y1);
+        let interp2 = Lagrange1dInterpolator::new(xp.clone(), y2);
+        let interp12 = interp1+interp2;
+        let interp12_ref = Lagrange1dInterpolator::new(xp.clone(),y12);
+        let (y_cal,y_ref) = (interp12.eval_vec(&xi),interp12_ref.eval_vec(&xi));
+        assert!(y_cal.iter().zip(y_ref.iter()).all(|(&a,&b)| (a-b).abs() < 1e-12));
+
+        // test add with different xa
+        let y1 = xm.iter().map(|&x| f1(x)).collect::<Vec<_>>();
+        let y2 = xp.iter().map(|&x| f2(x)).collect::<Vec<_>>();
+        let y12 = xp.iter().map(|&x| f1plusf2(x)).collect::<Vec<_>>();
+        let interp1 = Lagrange1dInterpolator::new(xm.clone(), y1);
+        let interp2 = Lagrange1dInterpolator::new(xp.clone(), y2);
+        let interp12 = interp2+interp1;
+        let interp12_ref = Lagrange1dInterpolator::new(xp.clone(),y12);
+        let (y_cal,y_ref) = (interp12.eval_vec(&xi),interp12_ref.eval_vec(&xi));
+        assert!(y_cal.iter().zip(y_ref.iter()).all(|(&a,&b)| (a-b).abs() < 1e-4));
+    }
+    
+    #[test]
+    pub fn lag1_sub_operators() {
+        // 
+        let f1 = |x: f64| f64::cos(2.0*PI*x);
+        let f2 = |x: f64| x.powf(1.5);
+        let f1plusf2 = |x: f64| f1(x) - f2(x);
+        let (a,b) = (0.0,1.0);
+        let (nm,np) = (9,10);
+        let (xm,xp) = (gauss_chebyshev_nodes(&nm, &a, &b),gauss_chebyshev_nodes(&np, &a, &b));
+        // 
+        let ni = 100;
+        let xi = linspace(&ni, &a, &b);
+
+        // test add with same xa == xp
+        let (y1,y2): (Vec<f64>,Vec<f64>) = xp.iter().map(|&x| (f1(x),f2(x))).unzip();
+        let y12 = xp.iter().map(|&x| f1plusf2(x)).collect::<Vec<_>>();
+        let interp1 = Lagrange1dInterpolator::new(xp.clone(), y1);
+        let interp2 = Lagrange1dInterpolator::new(xp.clone(), y2);
+        let interp12 = interp1-interp2;
+        let interp12_ref = Lagrange1dInterpolator::new(xp.clone(),y12);
+        let (y_cal,y_ref) = (interp12.eval_vec(&xi),interp12_ref.eval_vec(&xi));
+        assert!(y_cal.iter().zip(y_ref.iter()).all(|(&a,&b)| (a-b).abs() < 1e-12));
+
+        // test add with different xa
+        let y1 = xm.iter().map(|&x| f1(x)).collect::<Vec<_>>();
+        let y2 = xp.iter().map(|&x| f2(x)).collect::<Vec<_>>();
+        let y12 = xp.iter().map(|&x| f1plusf2(x)).collect::<Vec<_>>();
+        let interp1 = Lagrange1dInterpolator::new(xm.clone(), y1);
+        let interp2 = Lagrange1dInterpolator::new(xp.clone(), y2);
+        let interp12 = interp1-interp2;
+        let interp12_ref = Lagrange1dInterpolator::new(xp.clone(),y12);
+        let (y_cal,y_ref) = (interp12.eval_vec(&xi),interp12_ref.eval_vec(&xi));
+        assert!(y_cal.iter().zip(y_ref.iter()).all(|(&a,&b)| (a-b).abs() < 1e-4));
+    }
+    
+    #[test]
+    pub fn lag1_mul_operators() {
+        // 
+        let f1 = |x: f64| f64::cos(2.0*PI*x);
+        let f2 = |x: f64| x.powf(1.5);
+        let f1plusf2 = |x: f64| f1(x)*f2(x);
+        let (a,b) = (0.0,1.0);
+        let (nm,np) = (9,10);
+        let (xm,xp) = (gauss_chebyshev_nodes(&nm, &a, &b),gauss_chebyshev_nodes(&np, &a, &b));
+        // 
+        let ni = 100;
+        let xi = linspace(&ni, &a, &b);
+
+        // test add with same xa == xp
+        let (y1,y2): (Vec<f64>,Vec<f64>) = xp.iter().map(|&x| (f1(x),f2(x))).unzip();
+        let y12 = xp.iter().map(|&x| f1plusf2(x)).collect::<Vec<_>>();
+        let interp1 = Lagrange1dInterpolator::new(xp.clone(), y1);
+        let interp2 = Lagrange1dInterpolator::new(xp.clone(), y2);
+        let interp12 = interp1*interp2;
+        let interp12_ref = Lagrange1dInterpolator::new(xp.clone(),y12);
+        let (y_cal,y_ref) = (interp12.eval_vec(&xi),interp12_ref.eval_vec(&xi));
+        assert!(y_cal.iter().zip(y_ref.iter()).all(|(&a,&b)| (a-b).abs() < 1e-12));
+
+        // test add with different xa
+        let y1 = xm.iter().map(|&x| f1(x)).collect::<Vec<_>>();
+        let y2 = xp.iter().map(|&x| f2(x)).collect::<Vec<_>>();
+        let y12 = xp.iter().map(|&x| f1plusf2(x)).collect::<Vec<_>>();
+        let interp1 = Lagrange1dInterpolator::new(xm.clone(), y1);
+        let interp2 = Lagrange1dInterpolator::new(xp.clone(), y2);
+        let interp12 = interp2*interp1;
+        let interp12_ref = Lagrange1dInterpolator::new(xp.clone(),y12);
+        let (y_cal,y_ref) = (interp12.eval_vec(&xi),interp12_ref.eval_vec(&xi));
+        assert!(y_cal.iter().zip(y_ref.iter()).all(|(&a,&b)| (a-b).abs() < 1e-4));
+    }
+
+    #[test]
+    pub fn lag1_div_operators() {
+        // 
+        let f1 = |x: f64| f64::cos(2.0*PI*x);
+        let f2 = |x: f64| 1.0+x.powf(1.5);
+        let f1plusf2 = |x: f64| f1(x)/f2(x);
+        let (a,b) = (0.0,1.0);
+        let (nm,np) = (9,10);
+        let (xm,xp) = (gauss_chebyshev_nodes(&nm, &a, &b),gauss_chebyshev_nodes(&np, &a, &b));
+        // 
+        let ni = 100;
+        let xi = linspace(&ni, &a, &b);
+
+        // test add with same xa == xp
+        let (y1,y2): (Vec<f64>,Vec<f64>) = xp.iter().map(|&x| (f1(x),f2(x))).unzip();
+        let y12 = xp.iter().map(|&x| f1plusf2(x)).collect::<Vec<_>>();
+        let interp1 = Lagrange1dInterpolator::new(xp.clone(), y1);
+        let interp2 = Lagrange1dInterpolator::new(xp.clone(), y2);
+        let interp12 = interp1/interp2;
+        let interp12_ref = Lagrange1dInterpolator::new(xp.clone(),y12);
+        let (y_cal,y_ref) = (interp12.eval_vec(&xi),interp12_ref.eval_vec(&xi));
+        assert!(y_cal.iter().zip(y_ref.iter()).all(|(&a,&b)| (a-b).abs() < 1e-12));
+
+        // test add with different xa
+        let y1 = xm.iter().map(|&x| f1(x)).collect::<Vec<_>>();
+        let y2 = xp.iter().map(|&x| f2(x)).collect::<Vec<_>>();
+        let y12 = xp.iter().map(|&x| f1plusf2(x)).collect::<Vec<_>>();
+        let interp1 = Lagrange1dInterpolator::new(xm.clone(), y1);
+        let interp2 = Lagrange1dInterpolator::new(xp.clone(), y2);
+        let interp12 = interp1/interp2;
+        let interp12_ref = Lagrange1dInterpolator::new(xp.clone(),y12);
+        let (y_cal,y_ref) = (interp12.eval_vec(&xi),interp12_ref.eval_vec(&xi));
+        assert!(y_cal.iter().zip(y_ref.iter()).all(|(&a,&b)| (a-b).abs() < 1e-4));
     }
 }
