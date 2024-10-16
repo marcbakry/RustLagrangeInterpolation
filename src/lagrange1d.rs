@@ -461,4 +461,4 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> DivAssig
 
 // TESTS
 #[cfg(test)]
-pub mod lag1d_tests;
+pub mod lag1_tests;
