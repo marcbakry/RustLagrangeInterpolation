@@ -43,6 +43,34 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
         return self.lag2_interps.iter().map(|interp| interp.eval_grid(x1, x2)).collect::<Vec<_>>();
     }
 
+    pub fn eval_vec(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<Vec<U>> {
+        return self.lag2_interps.iter().map(|interp| interp.eval_vec(x1, x2)).collect::<Vec<_>>();
+    }
+    
+    pub fn eval_arr(&self, x: &Vec<[T;2]>) -> Vec<Vec<U>> {
+        return self.lag2_interps.iter().map(|interp| interp.eval_arr(x)).collect::<Vec<_>>();
+    }
+
+    pub fn eval_tup(&self, x: &Vec<(T,T)>) -> Vec<Vec<U>> {
+        return self.lag2_interps.iter().map(|interp| interp.eval_tup(x)).collect::<Vec<_>>();
+    }
+
+    pub fn par_eval_grid(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<Vec<U>>{
+        return self.lag2_interps.iter().map(|interp| interp.par_eval_grid(x1, x2)).collect::<Vec<_>>();
+    }
+
+    pub fn par_eval_vec(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<Vec<U>> {
+        return self.lag2_interps.iter().map(|interp| interp.par_eval_vec(x1, x2)).collect::<Vec<_>>();
+    }
+    
+    pub fn par_eval_arr(&self, x: &Vec<[T;2]>) -> Vec<Vec<U>> {
+        return self.lag2_interps.iter().map(|interp| interp.par_eval_arr(x)).collect::<Vec<_>>();
+    }
+
+    pub fn par_eval_tup(&self, x: &Vec<(T,T)>) -> Vec<Vec<U>> {
+        return self.lag2_interps.iter().map(|interp| interp.par_eval_tup(x)).collect::<Vec<_>>();
+    }
+
     pub fn jacobian(&self) -> Vec<[Lagrange2dInterpolator<T,U>;2]> {
         self.lag2_interps.iter().map(|interp| [interp.differentiate_x1(),interp.differentiate_x2()]).collect::<Vec<_>>()
     }

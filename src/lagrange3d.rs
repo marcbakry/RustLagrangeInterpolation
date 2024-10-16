@@ -3,6 +3,7 @@ extern crate num_traits;
 pub mod lag3_utilities;
 
 use num_traits::{zero,AsPrimitive};
+use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use std::fmt::{Debug,Display,Formatter,Result};
 use std::ops::{DivAssign, MulAssign};
 
@@ -46,6 +47,53 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
         return self.lag3_interps.iter().map(|interp| interp.eval_grid(x1, x2, x3)).collect::<Vec<_>>();
     }
 
+    pub fn eval_vec(&self, x1: &Vec<T>, x2: &Vec<T>, x3: &Vec<T>) -> Vec<Vec<U>> {
+        return self.lag3_interps.iter().map(|interp| interp.eval_vec(x1, x2, x3)).collect::<Vec<_>>();
+    }
+    
+    pub fn eval_arr(&self, x: &Vec<[T;3]>) -> Vec<Vec<U>> {
+        return self.lag3_interps.iter().map(|interp| interp.eval_arr(x)).collect::<Vec<_>>();
+    }
+
+    pub fn eval_tup(&self, x: &Vec<(T,T,T)>) -> Vec<Vec<U>> {
+        return self.lag3_interps.iter().map(|interp| interp.eval_tup(x)).collect::<Vec<_>>();
+    }
+
+    pub fn par_eval_grid(&self, x1: &Vec<T>, x2: &Vec<T>, x3: &Vec<T>) -> Vec<Vec<U>>{
+        return self.lag3_interps.iter().map(|interp| interp.par_eval_grid(x1, x2,x3)).collect::<Vec<_>>();
+    }
+
+    pub fn par_eval_vec(&self, x1: &Vec<T>, x2: &Vec<T>, x3: &Vec<T>) -> Vec<Vec<U>> {
+        return self.lag3_interps.iter().map(|interp| interp.par_eval_vec(x1, x2,x3)).collect::<Vec<_>>();
+    }
+    
+    pub fn par_eval_arr(&self, x: &Vec<[T;3]>) -> Vec<Vec<U>> {
+        return self.lag3_interps.iter().map(|interp| interp.par_eval_arr(x)).collect::<Vec<_>>();
+    }
+
+    pub fn par_eval_tup(&self, x: &Vec<(T,T,T)>) -> Vec<Vec<U>> {
+        return self.lag3_interps.iter().map(|interp| interp.par_eval_tup(x)).collect::<Vec<_>>();
+    }
+
+    pub fn jacobian(&self) -> Vec<[Lagrange3dInterpolator<T,U>;3]> {
+        self.lag3_interps.iter().map(|interp| [interp.differentiate_x1(),interp.differentiate_x2(),interp.differentiate_x3()]).collect::<Vec<_>>()
+    }
+    
+    pub fn get_inner_interpolators(&self) -> Vec<Lagrange3dInterpolator<T,U>> {
+        return self.lag3_interps.clone();
+    }
+
+    pub fn order(&self) -> Vec<(usize,usize,usize)> {
+        self.lag3_interps.iter().map(|interp| interp.order()).collect::<Vec<_>>()
+    }
+    
+    pub fn len(&self) -> Vec<(usize,usize,usize)> {
+        self.lag3_interps.iter().map(|interp| interp.len()).collect::<Vec<_>>()
+    }
+
+    pub fn dim(&self) -> usize {
+        return self.lag3_interps.len();
+    }
 }
 
 impl<T,U> Lagrange3dInterpolator<T,U> where
@@ -134,6 +182,22 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
         x.iter().map(|e| lag3_eval(&self.x1a, &self.x2a, &self.x3a, &self.ya, &e.0, &e.1, &e.2)).collect::<Vec<_>>()
     }
 
+    pub fn par_eval_grid(&self, x1: &Vec<T>, x2: &Vec<T>, x3: &Vec<T>) -> Vec<U> {
+        (*x1).par_iter().flat_map_iter(|xx1| (*x2).iter().flat_map(|xx2| (*x3).iter().map(|xx3| self.eval(xx1, xx2, xx3)))).collect::<Vec<_>>()
+    }
+
+    pub fn par_eval_vec(&self, x1: &Vec<T>, x2: &Vec<T>, x3: &Vec<T>) -> Vec<U> {
+        (*x1).par_iter().zip_eq((*x2).par_iter()).zip_eq((*x3).par_iter()).map(|((xx1,xx2),xx3)| self.eval(xx1, xx2, xx3)).collect::<Vec<_>>()
+    }
+
+    pub fn par_eval_arr(&self, x: &Vec<[T;3]>) -> Vec<U> {
+        (*x).par_iter().map(|&xx| self.eval(&xx[0], &xx[1], &xx[2])).collect::<Vec<U>>()
+    }
+
+    pub fn par_eval_tup(&self, x: &Vec<(T,T,T)>) -> Vec<U> {
+        (*x).par_iter().map(|&(x1,x2,x3)| self.eval(&x1,&x2,&x3)).collect::<Vec<_>>()
+    }
+
     pub fn differentiate_x1(&self) -> Lagrange3dInterpolator<T, U> {
         // 
         let (x1a,x2a,x3a,ya) = self.get_interp_data();
@@ -204,6 +268,10 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
             output.diff3_order = new_diff3_order;
             return output;
         }
+    }
+
+    pub fn gradient(&self) -> [Lagrange3dInterpolator<T,U>;3] {
+        return [self.differentiate_x1(),self.differentiate_x2(),self.differentiate_x3()] ;
     }
 }
 
