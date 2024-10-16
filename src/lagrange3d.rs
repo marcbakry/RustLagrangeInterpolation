@@ -275,7 +275,11 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
     }
 }
 
-
+impl<T: LagRealTrait, U: LagComplexTrait> Display for Lagrange3dInterpolator<T,U> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f,"Lagrange 2d gridded interpolator:\n- length = {} x {} x {}\n- differentiation order = ({},{},{})",self.x1a.len(),self.x2a.len(), self.x3a.len(),self.diff1_order,self.diff2_order,self.diff3_order)
+    }
+}
 // TESTS
 #[cfg(test)]
 pub mod lag3_tests;
