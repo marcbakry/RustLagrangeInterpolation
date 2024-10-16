@@ -243,7 +243,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Add<U> f
     type Output = Lagrange2dInterpolator<T,U>;
     fn add(self, rhs: U) -> Self::Output {
         let (x1a,x2a,ya) = self.get_interp_data();
-        let new_ya = ya.iter().flat_map(|y| y.iter()).map(|&e| e-rhs).collect::<Vec<_>>();
+        let new_ya = ya.iter().flat_map(|y| y.iter()).map(|&e| e+rhs).collect::<Vec<_>>();
         return Lagrange2dInterpolator::new(x1a, x2a, new_ya);
     }
 }
