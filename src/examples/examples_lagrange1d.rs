@@ -8,7 +8,7 @@ use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Interpolation of a cosinus-based function and its derivative
-/// using the ```.differentiate()``` function.
+/// using the `self.differentiate()` function.
 pub fn lag1_example_cosinus() {
     println!("+--------------------------------------+");
     println!("| Running Lagrange 1d: COSINE FUNCTION |");
@@ -42,7 +42,7 @@ pub fn lag1_example_cosinus() {
     println!("Done.");
 }
 
-/// Interpolation of ```f(x) = x^2``` and its derivatives illustrating successive
+/// Interpolation of `f(x) = x^2` and its derivatives illustrating successive
 /// differentations of the initial interpolator.
 pub fn lag1_example_quadratic_function() {
     println!("+-----------------------------------------+");

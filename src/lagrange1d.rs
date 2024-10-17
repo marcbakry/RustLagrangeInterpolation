@@ -1,13 +1,13 @@
 //! This module provides implementations of the univariate Lagrange interpolator for 
-//! scalar (Lagrange1dInterpolator) and vector (Lagrange1dInterpolatorVec) real/complex
+//! scalar (`Lagrange1dInterpolat`or) and vector (`Lagrange1dInterpolatorVec`) real/complex
 //! fields using the Rust standard library. It relies heavily on the `Vec` type.
 //! 
 //! # Cool features
 //! 
-//! All interpolators implement the Add/AddAssign, Sub/SubAssign, Mul/MulAssig, Div/DivAssign traits for
+//! All interpolators implement the `Add/AddAssign`, `Sub/SubAssign`, `Mul/MulAssign`, `Div/DivAssign` traits for
 //! a scalar value or another interpolator, thus allowing function-like manipulations.
 //! 
-//!  Parallel evaluation of the
+//! Parallel evaluation of the
 //! interpolator is available, based on the [rayon.rs](https://crates.io/crates/rayon) crate.
 //! 
 //! Computation of the derivatives of the interpolator are also available.
@@ -25,7 +25,7 @@ use rayon::prelude::*;
 use super::utilities::*;
 use lag1_utilities::*;
 
-/// The Lagrange1dInterpolator holds the data for the computation of the univariate
+/// The `Lagrange1dInterpolator` holds the data for the computation of the univariate
 /// one-dimensional Lagrange interpolation.
 #[derive(Debug,Clone)]
 pub struct Lagrange1dInterpolator<T,U> {
@@ -34,7 +34,7 @@ pub struct Lagrange1dInterpolator<T,U> {
     diff_order: usize
 }
 
-/// The Lagrange1dInterpolatorVec hold the data for the computation of the univariate
+/// The `Lagrange1dInterpolatorVec` hold the data for the computation of the univariate
 /// multidimensional Lagrange interpolation. It contains only a `Vec<Lagrange1dInterpolator>`.
 #[derive(Debug,Clone)]
 pub struct Lagrange1dInterpolatorVec<T,U> {
@@ -43,7 +43,7 @@ pub struct Lagrange1dInterpolatorVec<T,U> {
 
 impl<T,U> Lagrange1dInterpolatorVec<T,U> where 
 T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
-    /// Returns a Lagrange1dInterpolatorVec for a serie of (xa,ya) interpolation data.
+    /// Returns a `Lagrange1dInterpolatorVec` for a serie of `(xa,ya)` interpolation data.
     /// 
     /// # Panics
     /// 
@@ -66,7 +66,7 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
         };
     }
 
-    /// Evaluates a Lagrange1dInterpolatorVec at some `x`. The output is a vector
+    /// Evaluates a `Lagrange1dInterpolatorVec` at some `x`. The output is a vector
     /// containing the value returned by each inner interpolator.
     /// 
     /// # Example
@@ -80,7 +80,7 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
         return self.lag1_interps.iter().map(|interp| interp.eval(x)).collect::<Vec<U>>();
     }
 
-    /// Evaluates a Lagrange1dInterpolatorVec for multiple `x`. The result is a
+    /// Evaluates a `Lagrange1dInterpolatorVec` for multiple `x`. The result is a
     /// vector of vectors containing the values returned by each inner interpolator.
     /// 
     /// # Example
@@ -101,7 +101,7 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
     }
 
     /// Computes the first derivative of the current interpolator. The output is
-    /// a new Lagrange1dInterpolatorVec interpolating the values of the derivative
+    /// a new `Lagrange1dInterpolatorVec` interpolating the values of the derivative
     /// of the original inner interpolators.
     /// 
     /// # Example
@@ -116,7 +116,7 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
         };
     }
 
-    /// Returns the inner Lagrange1dInterpolators in a vector.
+    /// Returns the inner `Lagrange1dInterpolator`s in a vector.
     pub fn get_inner_interpolators(&self) -> Vec<Lagrange1dInterpolator<T, U>> {
         return self.lag1_interps.clone();
     }
@@ -141,6 +141,19 @@ impl<T,U> Lagrange1dInterpolator<T,U> where
 T: LagRealTrait,
 i32: AsPrimitive<T>,
 U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
+    /// Returns a `Lagrange1dInterpolator` for some interpolation data `(xa,ya)`.
+    /// 
+    /// # Panics
+    /// 
+    /// This function will panic if the interpolation data is ill-formed.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let xa = vec![1.0,2.0,3.0];
+    /// let ya = vec![1.0,1.1,1.2];
+    /// let i1d = Lagrange1dInterpolator::new(xa,ya);
+    /// ```
     pub fn new(xa: Vec<T>, ya: Vec<U>) -> Lagrange1dInterpolator<T,U> {
         // check consistency
         if xa.len() != ya.len() {
@@ -162,38 +175,82 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
         };
     }
 
+    /// Returns the order of the underlying polynomial
     pub fn order(&self) -> usize {
         self.xa.len()-1
     }
 
+    /// Returns the length of interpolation data
     pub fn len(&self) -> usize {
         self.xa.len()
     }
 
+    /// Returns the differentiation order of the interpolator with
+    /// respect to the original interpolated function.
     pub fn diff_order(&self) -> usize {
         self.diff_order
     }
 
+    /// Returns a clone of the interpolation data.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let idx = ...;
+    /// let (xa,ya) = idx.get_interp_data();
+    /// ```
     pub fn get_interp_data(&self) -> (Vec<T>,Vec<U>) {
         (self.xa.clone(),self.ya.clone())
     }
 
+    /// Same as `get_interp_data()`, but returns references.
     pub fn get_interp_data_ref(&self) -> (&Vec<T>,&Vec<U>) {
         (&(self.xa),&(self.ya))
     }
 
+    /// Evalutes the interpolator et `x`.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let i1d = Lagrange1dInterpolator::new(...);
+    /// let x   = 1.0;
+    /// let val = i1d.eval(&x);
+    /// ```
     pub fn eval(&self, x: &T) -> U {
         lag1_eval(&self.xa, &self.ya, x)
     }
 
+    /// Same as `.eval()`, but for a vector of positions.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let i1d = ...;
+    /// let x = vec![1.0,2.0,3.0];
+    /// let val = i1d.eval_vec(&x);
+    /// ```
     pub fn eval_vec(&self, x: &Vec<T>) -> Vec<U> {
         lag1_eval_vec(&self.xa, &self.ya, &x)
     }
 
+
+    /// Parallel version of `.eval_vec()`.
     pub fn par_eval_vec(&self, x: &Vec<T>) -> Vec<U>{
         return (*x).par_iter().map(|xx| self.eval(xx)).collect::<Vec<U>>();
     }
 
+    /// Returns the first derivative of `self` as a new `Lagrange1dInterpolator` 
+    /// on `self.len()-1` nodes. If the length of the new interpolator falls 
+    /// to 0, it returns instead a `Lagrange1dInterpolator` with a single node
+    /// and the value 0.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let i1d = ...;
+    /// let i1d_dx = i1d.differentiate();
+    /// ```
     pub fn differentiate(&self) -> Lagrange1dInterpolator<T,U> {
         let (xa,ya) = self.get_interp_data();
         let n = self.len();
@@ -217,6 +274,8 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
         }
     }
 
+    /// Computes the n-th derivative of `self` as a `Lagrange1dInterpolator` with length
+    /// `self.len()-n`.
     pub fn differentiate_n_times(&self, n: usize) -> Lagrange1dInterpolator<T,U> {
         let mut dinterp = self.clone();
         for _ in 0..n {
@@ -232,6 +291,15 @@ impl<T: LagRealTrait,U: LagComplexTrait> Display for Lagrange1dInterpolator<T,U>
     }
 }
 
+/// Adds a scalar to the current interpolator.
+/// 
+/// # Example
+/// 
+/// ```
+/// let (xa,ya) = (vec![1.0,2.0],vec![c64::new(1.0,1.0),c64::new(2.0,2.0)]);
+/// let i1d = Lagrange1dInterpolator::new(xa,ya);
+/// let i1d_new = i1d + c64::new(-1.0,-1.5);
+/// ```
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Add<U> for Lagrange1dInterpolator<T,U> {
     type Output = Lagrange1dInterpolator<T,U>;
     fn add(self, rhs: U) -> Self::Output {
@@ -243,6 +311,20 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Add<U> f
     }
 }
 
+/// Adds another interpolator of *the same kind* (single/double precision, real/complex) to
+/// `self`. If the nodes for the interpolation are identical, the interpolation datas are 
+/// simply added one to the other. If not, the interpolator with the lowest number of nodes
+/// is interpolated at the nodes of the other one. Then, the datas are added.
+/// 
+/// *Important:* If `i1d` and `i2d` interpolate two functions `f1` and `f2`, their sum
+/// will not interpolate exactly `f1 + f2` if the interpolation nodes differ.
+/// 
+/// # Example
+/// 
+/// ```
+/// let (i1d,i2d) = (...,...);
+/// let i_sum = i1d+i2d;
+/// ```
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Add<Lagrange1dInterpolator<T,U>> for Lagrange1dInterpolator<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange1dInterpolator<T,U>;
     fn add(self, rhs: Lagrange1dInterpolator<T,U>) -> Self::Output {
@@ -267,6 +349,15 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Add<Lagr
     }
 }
 
+/// See `Add`.
+/// 
+/// # Example
+/// 
+/// ```
+/// let (xa,ya) = (vec![1.0,2.0],vec![c64::new(1.0,1.0),c64::new(2.0,2.0)]);
+/// let mut i1d = Lagrange1dInterpolator::new(xa,ya);
+/// i1d += c64::new(-1.0,-1.5);
+/// ```
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> AddAssign<U> for Lagrange1dInterpolator<T,U> {
     fn add_assign(&mut self, other: U) {
         for e in &mut self.ya {
@@ -275,6 +366,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> AddAssig
     }
 }
 
+/// Subtracts a scalar to `self`.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Sub<U> for Lagrange1dInterpolator<T,U> {
     type Output = Lagrange1dInterpolator<T,U>;
     fn sub(self, rhs: U) -> Self::Output {
@@ -286,6 +378,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Sub<U> f
     }
 }
 
+/// Substracts two interpolators. See also `Add`.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Sub<Lagrange1dInterpolator<T,U>> for Lagrange1dInterpolator<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange1dInterpolator<T,U>;
     fn sub(self, rhs: Lagrange1dInterpolator<T,U>) -> Self::Output {
@@ -310,6 +403,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Sub<Lagr
     }
 }
 
+/// See `Sub`.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> SubAssign<U> for Lagrange1dInterpolator<T,U> {
     fn sub_assign(&mut self, other: U) {
         for e in &mut self.ya {
@@ -318,6 +412,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> SubAssig
     }
 }
 
+/// Multiplies `self` by a scalar.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Mul<U> for Lagrange1dInterpolator<T,U> {
     type Output = Lagrange1dInterpolator<T,U>;
     fn mul(self, rhs: U) -> Self::Output {
@@ -329,6 +424,8 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Mul<U> f
     }
 }
 
+/// Product of two interpolators yielding an approximate interpolator of the product of the
+/// original functions. See also `Add`.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Mul<Lagrange1dInterpolator<T,U>> for Lagrange1dInterpolator<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange1dInterpolator<T,U>;
     fn mul(self, rhs: Lagrange1dInterpolator<T,U>) -> Self::Output {
@@ -353,6 +450,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Mul<Lagr
     }
 }
 
+/// See `Mul`.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> MulAssign<U> for Lagrange1dInterpolator<T,U> {
     fn mul_assign(&mut self, other: U) {
         for e in &mut self.ya {
@@ -361,6 +459,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> MulAssig
     }
 }
 
+/// Divides `self` by a scalar.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Div<U> for Lagrange1dInterpolator<T,U> {
     type Output = Lagrange1dInterpolator<T,U>;
     fn div(self, rhs: U) -> Self::Output {
@@ -372,6 +471,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Div<U> f
     }
 }
 
+/// Divides `self` by another interpolator.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Div<Lagrange1dInterpolator<T,U>> for Lagrange1dInterpolator<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange1dInterpolator<T,U>;
     fn div(self, rhs: Lagrange1dInterpolator<T,U>) -> Self::Output {
@@ -396,6 +496,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Div<Lagr
     }
 }
 
+/// See `Div`.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> DivAssign<U> for Lagrange1dInterpolator<T,U> {
     fn div_assign(&mut self, other: U) {
         for e in &mut self.ya {
@@ -405,6 +506,8 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> DivAssig
 }
 
 // implementation of the basic operators for Lagrange1dInterpolatorVec
+
+/// Extension of the `Add`-trait family to `Lagrange1dInteprolatorVec`.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Add<U> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange1dInterpolatorVec<T,U>;
 
@@ -415,6 +518,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Add<U> f
     }
 }
 
+/// Extension of the `Add`-trait family to `Lagrange1dInteprolatorVec`.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Add<Lagrange1dInterpolatorVec<T,U>> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange1dInterpolatorVec<T,U>;
 
@@ -427,6 +531,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Add<Lagr
     }
 }
 
+/// Extension of the `Add`-trait family to `Lagrange1dInteprolatorVec`.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> AddAssign<U> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     fn add_assign(&mut self, other: U) {
         for e in &mut self.lag1_interps {
@@ -435,6 +540,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> AddAssig
     }
 }
 
+/// Extension of the `Sub`-trait family to `Lagrange1dInteprolatorVec`.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Sub<U> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange1dInterpolatorVec<T,U>;
 
@@ -445,6 +551,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Sub<U> f
     }
 }
 
+/// Extension of the `Sub`-trait family to `Lagrange1dInteprolatorVec`.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Sub<Lagrange1dInterpolatorVec<T,U>> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange1dInterpolatorVec<T,U>;
 
@@ -457,6 +564,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Sub<Lagr
     }
 }
 
+/// Extension of the `Sub`-trait family to `Lagrange1dInteprolatorVec`.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> SubAssign<U> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     fn sub_assign(&mut self, other: U) {
         for e in &mut self.lag1_interps {
@@ -465,6 +573,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> SubAssig
     }
 }
 
+/// Extension of the `Mul`-trait family to `Lagrange1dInteprolatorVec`.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Mul<U> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange1dInterpolatorVec<T,U>;
 
@@ -475,6 +584,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Mul<U> f
     }
 }
 
+/// Extension of the `Mul`-trait family to `Lagrange1dInteprolatorVec`.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Mul<Lagrange1dInterpolatorVec<T,U>> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange1dInterpolatorVec<T,U>;
 
@@ -487,6 +597,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Mul<Lagr
     }
 }
 
+/// Extension of the `Mul`-trait family to `Lagrange1dInteprolatorVec`.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> MulAssign<U> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     fn mul_assign(&mut self, other: U) {
         for e in &mut self.lag1_interps {
@@ -495,6 +606,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> MulAssig
     }
 }
 
+/// Extension of the `Div`-trait family to `Lagrange1dInteprolatorVec`.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Div<U> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange1dInterpolatorVec<T,U>;
 
@@ -505,6 +617,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Div<U> f
     }
 }
 
+/// Extension of the `Div`-trait family to `Lagrange1dInteprolatorVec`.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Div<Lagrange1dInterpolatorVec<T,U>> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange1dInterpolatorVec<T,U>;
 
@@ -517,6 +630,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Div<Lagr
     }
 }
 
+/// Extension of the `Div`-trait family to `Lagrange1dInteprolatorVec`.
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> DivAssign<U> for Lagrange1dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     fn div_assign(&mut self, other: U) {
         for e in &mut self.lag1_interps {

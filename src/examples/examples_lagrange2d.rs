@@ -45,7 +45,7 @@ pub fn lag2_example() {
     println!("Done.");
 }
 
-/// Comparison between the sequential and parallel versions of the evaluation of Lagrange2dInterpolator.
+/// Comparison between the sequential and parallel versions of the evaluation of `Lagrange2dInterpolator`.
 pub fn lag2_parallel_example() {
     println!("+-----------------------------------+");
     println!("| Running Lagrange 2d: SEQ. vs PAR. |");

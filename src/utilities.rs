@@ -44,7 +44,7 @@ pub fn argsort<T: PartialOrd>(x: &Vec<T>) -> Vec<usize> {
     return indices;
 }
 
-/// Routine computing the following partial sum ```\sum_{i=1, i\neq j}^{n}{\frac{1}{x - xa_i}}```
+/// Routine computing the following partial sum `\sum_{i=1, i\neq j}^{n}{\frac{1}{x - xa_i}}`
 /// for an input vector `xa`` with length  `n`.
 /// 
 /// # Example
@@ -84,7 +84,7 @@ pub fn check_duplicate<T: LagRealTrait>(xa: &Vec<T>) {
     } else {return val;}}).collect::<Vec<f64>>();
 }
 
-/// Computes the n Gauss-Chebyshev nodes on the interval \[a,b\] such that x_i = -cos(pi i/(n-1))
+/// Computes the n Gauss-Chebyshev nodes on the interval `[a,b]` such that `x_i = -cos(pi i/(n-1))`
 /// 
 /// # Example
 /// 
@@ -99,7 +99,7 @@ pub fn gauss_chebyshev_nodes<T: LagRealTrait>(n: &usize, a: &T, b: &T) -> Vec<T>
     }).collect::<Vec<_>>()
 }
 
-/// Computes n linearly-spaced nodes on the interval \[a,b\]
+/// Computes n linearly-spaced nodes on the interval `[a,b]`
 /// 
 /// # Example
 /// 
