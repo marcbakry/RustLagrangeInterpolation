@@ -2,6 +2,24 @@
 //! scalar (`Lagrange1dInterpolat`or) and vector (`Lagrange1dInterpolatorVec`) real/complex
 //! fields using the Rust standard library. It relies heavily on the `Vec` type.
 //! 
+//! The interpolator requires a vector of interpolation nodes `xa` and the corresponding 
+//! data `ya`. The basic use is as follows.
+//! 
+//! ```
+//! use lagrange_interpolation::lagrange1d::*;
+//! use lagrange_interpolation::utilities::*;
+//! 
+//! ...
+//! let f = |x| f64::sin(2.0*std::f64::consts::PI*x); // some function
+//! let n = 10; // number of interpolation nodes
+//! let (a,b) = (0.0,1.0); // interpolation interval
+//! let xa = gauss_chebyshev_nodes(&n,&a,&b); // Chebyshev interpolation nodes
+//! let ya = xa.iter().map(|x| f(*x)).collect::<Vec<_>>(); // interpolation data
+//! let i1d = Lagrange1dInterpolator::new(xa,ya); // initialization of the interpolator
+//! let x = 0.5; // some interpolator
+//! let val = i1d.eval(&x); // should be 0.0
+//! ```
+//! 
 //! # Cool features
 //! 
 //! All interpolators implement the `Add/AddAssign`, `Sub/SubAssign`, `Mul/MulAssign`, `Div/DivAssign` traits for
@@ -25,8 +43,8 @@ use rayon::prelude::*;
 use super::utilities::*;
 use lag1_utilities::*;
 
-/// The `Lagrange1dInterpolator` holds the data for the computation of the univariate
-/// one-dimensional Lagrange interpolation.
+/// The `Lagrange1dInterpolator` structure holds the data for the computation of the 
+/// univariate one-dimensional Lagrange interpolation.
 #[derive(Debug,Clone)]
 pub struct Lagrange1dInterpolator<T,U> {
     xa: Vec<T>,
@@ -34,8 +52,9 @@ pub struct Lagrange1dInterpolator<T,U> {
     diff_order: usize
 }
 
-/// The `Lagrange1dInterpolatorVec` hold the data for the computation of the univariate
-/// multidimensional Lagrange interpolation. It contains only a `Vec<Lagrange1dInterpolator>`.
+/// The `Lagrange1dInterpolatorVec` holds the data for the computation of the univariate
+/// multidimensional Lagrange interpolation. It contains only a `Vec<Lagrange1dInterpolator>`
+/// but provides the same functionalities as `Lagrange1dInterpolator`.
 #[derive(Debug,Clone)]
 pub struct Lagrange1dInterpolatorVec<T,U> {
     lag1_interps: Vec<Lagrange1dInterpolator<T,U>>

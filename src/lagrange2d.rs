@@ -1,4 +1,37 @@
+//! This module provide implementations of the bivariate, **gridded**, Lagrange interpolator for
+//! scalar (`Lagrange2dInterpolat`or) and vector (`Lagrange2dInterpolatorVec`) real/complex
+//! fields using the Rust standard library. It relies heavily on the `Vec` type.
+//! 
+//! By **gridded**, we mean that the interpolation nodes should be dispatched over some
+//! `x1a x x2a` grid with size `n1a x n2a` using the `x2a`- major convention: let `ya` be
+//! the values at the interpolation nodes, the first `n2a` values correspond to `x1a[0]`, the next `n2a` to `x1a[1]` and so on. Below, we show how we can interpolate some function `f(x1,x2)` over the unit square using a different number of nodes in each direction.
+//! 
+//! ```
+//! use lagrange_interpolation::lagrange2d::*;
+//! use lagrange_interpolation::utilities::*;
+//! 
+//! ...
+//! 
+//! let f = |x1:f64, x2: f64| f64::cos(2.0*std::f64::consts::PI*x1.powi(2))*x2.powf(1.5);
+//! let (n1a,n2a) = (9,10);
+//! let (a,b) = (0.0,1.0);
+//! let (x1a,x2a) = (gauss_chebyshev_nodes(&n1a,&a,&b),gauss_chebyshev_nodes(&n2a,&a,&b));
+//! let ya = x1a.iter().map_flat(|x1| x2a.iter().map(move |x2| f(*x1,*x2))).collect::<Vec<_>>();
+//! let i2d = Lagrange2dInterpolator::new(x1a,x2a,ya);
+//! let (x1,x2) = (1.0/3.0,2.0/3.0);
+//! let value = i2d.eval(&x1,&x2); // interpolation at a single value (x1,x2)
+//! ```
+//! 
+//! # Cool features
+//! 
+//! All interpolators implement the `Add/AddAssign`, `Sub/SubAssign`, `Mul/MulAssign`, `Div/DivAssign` traits for
+//! a scalar value or another interpolator, thus allowing function-like manipulations.
+//! 
+//! Parallel evaluation of the interpolator is available, based on the [rayon.rs](https://crates.io/crates/rayon) crate.
+//! 
+//! Computation of the partial derivatives of the interpolator are also available.
 extern crate num_traits;
+extern crate rayon;
 
 pub mod lag2_utilities;
 
@@ -10,6 +43,8 @@ use std::ops::{Div,DivAssign,Mul,MulAssign,Add,AddAssign,Sub,SubAssign};
 use super::utilities::*;
 use lag2_utilities::*;
 
+/// The `Lagrange2dInterpolator` structure holds the data for the computation of the
+/// bivariate one-dimensional gridded Lagrange interpolation.
 #[derive(Debug,Clone)]
 pub struct Lagrange2dInterpolator<T,U> {
     x1a: Vec<T>,
@@ -19,6 +54,9 @@ pub struct Lagrange2dInterpolator<T,U> {
     diff2_order: usize
 }
 
+/// The `Lagrange2dInterpolatorVec` holds the data for the computation of the bivariate
+/// multidimensional Lagrange interpolation. It contains only a `Vec<Lagrange2dInterpolator>`
+/// but provides the same functionalities as `Lagrange2dInterpolator`.
 #[derive(Debug,Clone)]
 pub struct Lagrange2dInterpolatorVec<T,U> {
     lag2_interps: Vec<Lagrange2dInterpolator<T,U>>
@@ -26,6 +64,21 @@ pub struct Lagrange2dInterpolatorVec<T,U> {
 
 impl<T,U> Lagrange2dInterpolatorVec<T,U> where
 T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
+    /// Returns as `Lagrange2dInterpolatorVec` for a serie of `(x1a,x2a,y)` interpolation data.
+    /// 
+    /// # Panics
+    /// 
+    /// This function will panic if the input sizes do not match, or if the individual 
+    /// interpolation data are ill-formed (duplicated entries in `x1a` or `x2a`, for example).
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let x1a = vec![vec![1.0,2.0,3.0],vec![1.5,2.5,3.5]];
+    /// let x2a = vec![vec![1.0,2.0,3.0],vec![1.5,2.5,3.5]];
+    /// let ya = vec![vec![1.0;9],vec![2.0;9]];
+    /// let i2d_vec = Lagrange2dInterpolatorVec::new(x1a,x2a,ya);
+    /// ```
     pub fn new(x1a: Vec<Vec<T>>, x2a: Vec<Vec<T>>, ya: Vec<Vec<U>>) -> Lagrange2dInterpolatorVec<T,U> {
         if x1a.len() != x2a.len() || x1a.len() != ya.len() {
             panic!("Error initializing the vector-field interpolator: inputs sizes do not match");
@@ -35,38 +88,52 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
          };
     }
 
+    /// Evaluates a `Lagrange2dInterpolatorVec` at some `(x1,x2)`. The output is a vector
+    /// containing the value returned by each inner interpolator.
     pub fn eval(&self, x1: &T, x2: &T) -> Vec<U> {
         return self.lag2_interps.iter().map(|interp| interp.eval(x1, x2)).collect::<Vec<_>>();
     }
 
+    /// Evaluates `self` on a grid given by `x1` and `x2` following the same ordering
+    /// as the interpolation grid.
     pub fn eval_grid(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<Vec<U>>{
         return self.lag2_interps.iter().map(|interp| interp.eval_grid(x1, x2)).collect::<Vec<_>>();
     }
 
+    /// Evaluates `self` on a set of nodes whose coordinates are given in two separate vectors.
+    /// The length of `x1` and `x2` must match.
     pub fn eval_vec(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<Vec<U>> {
         return self.lag2_interps.iter().map(|interp| interp.eval_vec(x1, x2)).collect::<Vec<_>>();
     }
     
+    /// Evaluates `self` on a set of nodes whose coorinates are given in a vector 
+    /// of size-two arrays.
     pub fn eval_arr(&self, x: &Vec<[T;2]>) -> Vec<Vec<U>> {
         return self.lag2_interps.iter().map(|interp| interp.eval_arr(x)).collect::<Vec<_>>();
     }
 
+    /// Evaluates `self` on a set of nodes whose coorinates are given in a vector 
+    /// of size-two tuples.
     pub fn eval_tup(&self, x: &Vec<(T,T)>) -> Vec<Vec<U>> {
         return self.lag2_interps.iter().map(|interp| interp.eval_tup(x)).collect::<Vec<_>>();
     }
 
+    /// Parallel version of `self.eval_grid()`.
     pub fn par_eval_grid(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<Vec<U>>{
         return self.lag2_interps.iter().map(|interp| interp.par_eval_grid(x1, x2)).collect::<Vec<_>>();
     }
 
+    /// Parallel version of `self.eval_vec()`.
     pub fn par_eval_vec(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<Vec<U>> {
         return self.lag2_interps.iter().map(|interp| interp.par_eval_vec(x1, x2)).collect::<Vec<_>>();
     }
     
+    /// Parallel version of `self.eval_arr()`.
     pub fn par_eval_arr(&self, x: &Vec<[T;2]>) -> Vec<Vec<U>> {
         return self.lag2_interps.iter().map(|interp| interp.par_eval_arr(x)).collect::<Vec<_>>();
     }
 
+    /// Parallel version of `self.eval_tup()`.
     pub fn par_eval_tup(&self, x: &Vec<(T,T)>) -> Vec<Vec<U>> {
         return self.lag2_interps.iter().map(|interp| interp.par_eval_tup(x)).collect::<Vec<_>>();
     }
