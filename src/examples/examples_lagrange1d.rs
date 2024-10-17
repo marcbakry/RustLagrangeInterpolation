@@ -1,9 +1,14 @@
+//! This module provides some example functions illustrating the use of
+//! Lagrange1dInterpolator and Lagrange1dInterpolator.
+
 use crate::lagrange1d::*;
 use crate::utilities::gauss_chebyshev_nodes;
 use crate::plot_utilities::*;
 use std::f64::consts::PI;
 use std::time::Instant;
 
+/// Interpolation of a cosinus-based function and its derivative
+/// using the '''.differentiate()''' function.
 pub fn lag1_example_cosinus() {
     println!("+--------------------------------------+");
     println!("| Running Lagrange 1d: COSINE FUNCTION |");
@@ -37,6 +42,8 @@ pub fn lag1_example_cosinus() {
     println!("Done.");
 }
 
+/// Interpolation of f(x) = x^2 and its derivatives illustrating successive
+/// differentations of the initial interpolator.
 pub fn lag1_example_quadratic_function() {
     println!("+-----------------------------------------+");
     println!("| Running Lagrange 1d: QUADRATIC FUNCTION |");
@@ -84,6 +91,7 @@ pub fn lag1_example_quadratic_function() {
     println!("Done.");
 }
 
+/// Comparison of the sequential and parallel versions of the evaluation of Lagrange1dInterpolator
 pub fn lag1_parallel_example() {
     println!("+-----------------------------------+");
     println!("| Running Lagrange 1d: SEQ. vs PAR. |");

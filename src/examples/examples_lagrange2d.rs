@@ -1,8 +1,11 @@
+//! This module provides some example functions illustrating the use of
+//! Lagrange2dInterpolator and Lagrange1dInterpolator.
 use crate::lagrange2d::Lagrange2dInterpolator;
 use crate::utilities::gauss_chebyshev_nodes;
 use crate::plot_utilities::*;
 use std::time::Instant;
 
+/// Example of interpolation of a function taken from the doc of the crate plotly.rs.
 pub fn lag2_example() {
     println!("+------------------------------------+");
     println!("| Running Lagrange 2d: WAVY FUNCTION |");
@@ -42,6 +45,7 @@ pub fn lag2_example() {
     println!("Done.");
 }
 
+/// Comparison between the sequential and parallel versions of the evaluation of Lagrange2dInterpolator.
 pub fn lag2_parallel_example() {
     println!("+-----------------------------------+");
     println!("| Running Lagrange 2d: SEQ. vs PAR. |");
