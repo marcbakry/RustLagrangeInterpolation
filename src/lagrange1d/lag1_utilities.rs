@@ -1,8 +1,15 @@
+//! Module containing the low-level functions for the construction and the evaluation
+//! of the Lagrange1dInterpolator.
 use super::super::utilities::{partial_sum,LagRealTrait,LagComplexTrait};
 
 use num_traits::zero;
 use std::ops::{DivAssign, MulAssign};
 
+/// Evaluation of the Lagrange interpolator with the data (xa,ya) at x.
+/// 
+/// # Panics
+/// 
+/// This function will panic if two values of xa are identical.
 pub fn lag1_eval<U,T>(xa: &Vec<T>, ya: &Vec<U>, x: &T) -> U 
 where 
 T: LagRealTrait,
@@ -38,6 +45,11 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
     return y;
 }
 
+/// Evaluation of the Lagrange interpolator with the data (xa,ya) for a vector x.
+/// 
+/// # Panics
+/// 
+/// This function will panic if two values of xa are identical.
 pub fn lag1_eval_vec<T,U>(xa: &Vec<T>, ya: &Vec<U>, x: &Vec<T>) -> Vec<U> 
 where 
 T: LagRealTrait,
@@ -45,6 +57,14 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
     x.iter().map(|e| lag1_eval(xa, ya, e)).collect::<Vec<U>>()
 }
 
+/// Evaluation of the first derivative of Lagrange interpolator with the data (xa,ya) at x.
+/// 
+/// *Important:* This function does not perform any NaN check and may return Nan if x is
+/// equal to one of the xa.
+/// 
+/// # Panics
+/// 
+/// This function will panic if two values of xa are identical.
 pub fn lag1_eval_derivative<T,U>(xa: &Vec<T>, ya: &Vec<U>, x: &T) -> U 
 where 
 T: LagRealTrait,
@@ -55,6 +75,14 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
         x)
 }
 
+/// Evaluation of the first derivative of Lagrange interpolator with the data (xa,ya) at values in a vector x.
+/// 
+/// *Important:* This function does not perform any NaN check and may return Nan if x is
+/// equal to one of the xa.
+/// 
+/// # Panics
+/// 
+/// This function will panic if two values of xa are identical.
 pub fn lag1_eval_derivative_vec<T,U>(xa: &Vec<T>, ya: &Vec<U>, x: &Vec<T>) -> Vec<U> 
 where 
 T: LagRealTrait,
