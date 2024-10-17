@@ -1,7 +1,12 @@
+//! This module provides some plotting functions using the [`plotly`]`(plotly.rs)` crate.
+//! 
+//! [`plotly.rs`]: https://crates.io/crates/plotly
+
 extern crate plotly;
 
 use plotly::{color::NamedColor, common::{Line, Marker, MarkerSymbol, Mode, Title}, layout::{ Axis, Layout}, Plot, Scatter,Surface};
 
+/// Plots three curves for comparison, with coordinates given in this order : reference data, interpolated data, interpolation data
 pub fn lag1_compare_plot(xref: &Vec<f64>, yref: &Vec<f64>, xi: &Vec<f64>, yi: &Vec<f64>, xa: &Vec<f64>, ya: &Vec<f64>, title: String) {
     // 
     let layout = Layout::new().x_axis(Axis::new().title(Title::from("x"))).y_axis(Axis::new().title(Title::from("y"))).title(title);
@@ -17,6 +22,8 @@ pub fn lag1_compare_plot(xref: &Vec<f64>, yref: &Vec<f64>, xi: &Vec<f64>, yi: &V
     plot.set_layout(layout);
     plot.show();
 }
+
+/// Plots a surface corresponding to some gridded data as returned by a Lagrange2dInterpolator
 pub fn lag2_surface_plot(x1: &Vec<f64>, x2: &Vec<f64>, y: &Vec<f64>, title: String) {
     // 
     let (n1,n2) = (x1.len(),x2.len());

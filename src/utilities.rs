@@ -63,7 +63,11 @@ pub fn partial_sum<T: LagRealTrait>(xa: &Vec<T>, x: &T, j: usize) -> T {
     }).fold(zero::<T>(), |acc,e| acc+e)
 }
 
-/// Checks for duplicated entries in the input vector and panics if true
+/// Checks for duplicated entries in the input vector
+/// 
+/// # Panics
+/// 
+/// This function will panic if two nodes are identical.
 /// 
 /// # Example
 /// 
