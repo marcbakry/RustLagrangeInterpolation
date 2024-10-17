@@ -7,7 +7,7 @@ use num_traits::zero;
 use std::ops::{DivAssign, MulAssign};
 
 /// Evaluation of the Lagrange interpolator with the data (x1a,x2a,ya) at (x1,x2).
-/// The data in `ya` should be sorted such that ya[0] contains the values 
+/// The data in `ya` should be sorted such that ya\[0\] contains the values 
 /// along x2a for the first value in x1a, and so on.
 /// 
 /// # Panics
@@ -22,7 +22,7 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
 
 /// Evaluation of the Lagrange interpolator with the data (x1a,x2a,ya) 
 /// for all (x1,x2) given in matching vectors (`assert_eq!(x1.len(),x2.len())`).
-/// The data in `ya` should be sorted such that ya[0] contains the values 
+/// The data in `ya` should be sorted such that ya\[0\] contains the values 
 /// along x2a for the first value in x1a, and so on.
 /// 
 /// # Panics
@@ -41,7 +41,7 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
 
 /// Evaluation of the Lagrange2dInterpolator with the data (x1a,x2a,ya) 
 /// for computation coordinates given as grid.
-/// The data in `ya` should be sorted such that ya[0] contains the values 
+/// The data in `ya` should be sorted such that ya\[0\] contains the values 
 /// along x2a for the first value in x1a, and so on.
 /// 
 /// # Panics

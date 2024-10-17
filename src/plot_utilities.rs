@@ -1,6 +1,4 @@
-//! This module provides some plotting functions using the [`plotly`]`(plotly.rs)` crate.
-//! 
-//! [`plotly.rs`]: https://crates.io/crates/plotly
+//! This module provides some plotting functions using the [plotly.rs](https://crates.io/crates/plotly) crate.
 
 extern crate plotly;
 

@@ -1,3 +1,5 @@
+//! Module containing useful functions which do not fit particularly in more 
+//! specialized modules (equally spaced nodes, consistency checks, etc.).
 extern crate num_traits;
 extern crate num;
 
@@ -19,10 +21,10 @@ impl<T> LagComplexTrait for T where T: 'static + NumCast + AddAssign + ComplexFl
 /// 
 /// #Example
 /// 
-/// '''
+/// ```
 /// let a = vec![1.0,2.0,3.0];
 /// let a_mid = midpoints(&a); // contains [1.5,2.5]
-/// '''
+/// ```
 pub fn midpoints<T: LagRealTrait>(x: &Vec<T>)->Vec<T> where i32: AsPrimitive<T> {
     (0..(x.len()-1)).map(|i| (x[i] + x[i+1])/(2.as_())).collect()
 }
@@ -31,10 +33,10 @@ pub fn midpoints<T: LagRealTrait>(x: &Vec<T>)->Vec<T> where i32: AsPrimitive<T> 
 /// 
 /// # Example
 /// 
-/// '''
+/// ```
 /// let a = vec![2.0,3.0,1.0];
 /// let idx = argsort(&a); // contains [2,0,1]
-/// '''
+/// ```
 pub fn argsort<T: PartialOrd>(x: &Vec<T>) -> Vec<usize> {
     let mut indices = (0..x.len()).collect::<Vec<usize>>();
     indices.sort_by(|a,b| x[*a].partial_cmp(&x[*b]).unwrap());
@@ -42,17 +44,17 @@ pub fn argsort<T: PartialOrd>(x: &Vec<T>) -> Vec<usize> {
     return indices;
 }
 
-/// Routine computing the following partial sum '''\sum_{i=1, i\neq j}^{n}{\frac{1}{x - xa_i}}'''
-/// for an input vector '''xa''' with length '''n'''
+/// Routine computing the following partial sum ```\sum_{i=1, i\neq j}^{n}{\frac{1}{x - xa_i}}```
+/// for an input vector `xa`` with length  `n`.
 /// 
 /// # Example
 /// 
-/// '''
+/// ```
 /// let xa = [1.0,2.0,3.0];
 /// let j = 1;
 /// let x = 1.5;
 /// let p = partial_sum(&xa,&x,j); // contains 1.0/(x-xa[0])+1.0/(x-xa[2])
-/// '''
+/// ```
 pub fn partial_sum<T: LagRealTrait>(xa: &Vec<T>, x: &T, j: usize) -> T {
     (0..xa.len()).map(|i| {
         if i!=j {
@@ -71,10 +73,10 @@ pub fn partial_sum<T: LagRealTrait>(xa: &Vec<T>, x: &T, j: usize) -> T {
 /// 
 /// # Example
 /// 
-/// '''
+/// ```
 /// let a = [1.0,1.0,2.0];
 /// check_duplicate(&a); // should panic
-/// '''
+/// ```
 pub fn check_duplicate<T: LagRealTrait>(xa: &Vec<T>) {
     let mut xac = xa.clone();
     xac.sort_by(|a,b| a.partial_cmp(b).unwrap());
@@ -82,14 +84,14 @@ pub fn check_duplicate<T: LagRealTrait>(xa: &Vec<T>) {
     } else {return val;}}).collect::<Vec<f64>>();
 }
 
-/// Computes the n Gauss-Chebyshev nodes on the interval [a,b] such that x_i = -cos(pi i/(n-1))
+/// Computes the n Gauss-Chebyshev nodes on the interval \[a,b\] such that x_i = -cos(pi i/(n-1))
 /// 
 /// # Example
 /// 
-/// '''
+/// ```
 /// let (a,b,n) = (0.0,1.0,3);
 /// let x = gauss_chebyshev_nodes(&n,&a,&b); // should contain [0.0,0.5,1.0]
-/// '''
+/// ```
 pub fn gauss_chebyshev_nodes<T: LagRealTrait>(n: &usize, a: &T, b: &T) -> Vec<T> where i32: AsPrimitive<T> {
     (0..*n).map(|i| {
         let x = -T::cos((T::acos(-one::<T>())*(i as i32).as_())/((*n-1) as i32).as_());
@@ -97,14 +99,14 @@ pub fn gauss_chebyshev_nodes<T: LagRealTrait>(n: &usize, a: &T, b: &T) -> Vec<T>
     }).collect::<Vec<_>>()
 }
 
-/// Computes n linearly-spaced nodes on the interval [a,b]
+/// Computes n linearly-spaced nodes on the interval \[a,b\]
 /// 
 /// # Example
 /// 
-/// '''
+/// ```
 /// let (a,b,n) = (-1.0,1.0,3);
 /// let x = linspace(&n,&a,&b); // should contain [-1.0,0.0,1.0]
-/// '''
+/// ```
 pub fn linspace<T:LagRealTrait>(n: &usize, a:&T, b: &T) -> Vec<T> {
     let stp = (*b-*a)/(T::from(*n-1).unwrap());
     (0..*n).map(|i| *a + T::from(i).unwrap()*stp).collect::<Vec<_>>()

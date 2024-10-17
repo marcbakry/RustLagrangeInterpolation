@@ -8,11 +8,9 @@
 //! a scalar value or another interpolator, thus allowing function-like manipulations.
 //! 
 //!  Parallel evaluation of the
-//! interpolator is available, based on the [`rayon`](rayon.rs) crate.
+//! interpolator is available, based on the [rayon.rs](https://crates.io/crates/rayon) crate.
 //! 
 //! Computation of the derivatives of the interpolator are also available.
-//! 
-//! [`rayon`]: https://crates.io/crates/rayon
 extern crate num_traits;
 extern crate rayon;
 
@@ -54,11 +52,11 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
     /// 
     /// # Example
     /// 
-    /// '''
+    /// ```
     /// let xa = vec![vec![1.0,2.0,3.0],vec![1.5,2.5,3.5]];
     /// let ya = vec![vec![1.0,1.1,1.2],vec![1.2,1.1,1.0]];
     /// let i1d_vec = Lagrange1dInterpolatorVec::new(xa,ya);
-    /// '''
+    /// ```
     pub fn new(xa: Vec<Vec<T>>, ya: Vec<Vec<U>>) -> Lagrange1dInterpolatorVec<T,U> {
         if xa.len() != ya.len() {
             panic!("Error initializing the vector-field interpolator: inputs sizes do not match");
@@ -73,11 +71,11 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
     /// 
     /// # Example
     /// 
-    /// '''
+    /// ```
     /// let i1d_vec = ...;
     /// let x = 0.0;
     /// let val = i1d_vec.eval(&x);
-    /// '''
+    /// ```
     pub fn eval(&self, x: &T) -> Vec<U> {
         return self.lag1_interps.iter().map(|interp| interp.eval(x)).collect::<Vec<U>>();
     }
@@ -87,11 +85,11 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
     /// 
     /// # Example
     /// 
-    /// '''
+    /// ```
     /// let i1d_vec = ...;
     /// let x = [0.0,1.0];
     /// let val = i1d_vec.eval(&x);
-    /// '''
+    /// ```
     pub fn eval_vec(&self, x: &Vec<T>) -> Vec<Vec<U>> {
         // For each x-value, returns the value of all inner interpolators
         return x.iter().map(|x| self.eval(x)).collect::<Vec<_>>();
@@ -108,10 +106,10 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
     /// 
     /// # Example
     /// 
-    /// '''
+    /// ```
     /// let i1d_vec = ...;
     /// let i1d_vec_dx = i1d_vec.differentiate(); // new Lagrange1dInterpolatorVec
-    /// '''
+    /// ```
     pub fn differentiate(&self) -> Lagrange1dInterpolatorVec<T,U> {
         return Lagrange1dInterpolatorVec {
             lag1_interps: self.lag1_interps.iter().map(|interp| interp.differentiate()).collect::<Vec<_>>()

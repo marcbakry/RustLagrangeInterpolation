@@ -1,3 +1,4 @@
+//! Interface module for running the examples.
 pub mod examples_lagrange1d;
 pub mod examples_lagrange2d;
 

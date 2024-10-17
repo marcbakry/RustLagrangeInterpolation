@@ -9,7 +9,7 @@ use std::ops::{DivAssign, MulAssign};
 
 
 /// Evaluation of the Lagrange interpolator with the data (x1a,x2a,x3a,ya) at (x1,x2,x3).
-/// The data in `ya` should be sorted such that ya[0] contains the values 
+/// The data in `ya` should be sorted such that ya\[0\] contains the values 
 /// along x2a for the first value in x1a, and so on.
 /// 
 /// # Panics
@@ -24,7 +24,7 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
 
 /// Evaluation of the Lagrange3dInterpolator with the data (x1a,x2a,x3a,ya) 
 /// for computation coordinates given as grid.
-/// The data in `ya` should be sorted such that ya[0] contains the values 
+/// The data in `ya` should be sorted such that ya\[0\] contains the values 
 /// along x2a for the first value in x1a, and so on.
 /// 
 /// # Panics
@@ -49,7 +49,7 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
 
 /// Evaluation of the Lagrange interpolator with the data (x1a,x2a,x3a,ya) 
 /// for all (x1,x2,x3) given in matching vectors (`assert_eq!(x1.len(),x2.len())`) etc.
-/// The data in `ya` should be sorted such that ya[0] contains the values 
+/// The data in `ya` should be sorted such that ya\[0\] contains the values 
 /// along x2a for the first value in x1a, and so on.
 /// 
 /// # Panics
