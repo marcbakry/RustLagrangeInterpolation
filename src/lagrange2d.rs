@@ -455,7 +455,7 @@ impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> DivAssig
     }
 }
 
-// implementation of the basic operators for Lagrange1dInterpolatorVec
+// implementation of the basic operators for Lagrange2dInterpolatorVec
 impl<T: LagRealTrait, U: LagComplexTrait + DivAssign<T> + MulAssign<T>> Add<U> for Lagrange2dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange2dInterpolatorVec<T,U>;
 
