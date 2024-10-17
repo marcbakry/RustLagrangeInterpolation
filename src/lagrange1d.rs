@@ -1,3 +1,18 @@
+//! This module provides implementations of the univariate Lagrange interpolator for 
+//! scalar (Lagrange1dInterpolator) and vector (Lagrange1dInterpolatorVec) real/complex
+//! fields using the Rust standard library. It relies heavily on the `Vec` type.
+//! 
+//! # Cool features
+//! 
+//! All interpolators implement the Add/AddAssign, Sub/SubAssign, Mul/MulAssig, Div/DivAssign traits for
+//! a scalar value or another interpolator, thus allowing function-like manipulations.
+//! 
+//!  Parallel evaluation of the
+//! interpolator is available, based on the [`rayon`](rayon.rs) crate.
+//! 
+//! Computation of the derivatives of the interpolator are also available.
+//! 
+//! [`rayon`]: https://crates.io/crates/rayon
 extern crate num_traits;
 extern crate rayon;
 
@@ -12,6 +27,8 @@ use rayon::prelude::*;
 use super::utilities::*;
 use lag1_utilities::*;
 
+/// The Lagrange1dInterpolator holds the data for the computation of the univariate
+/// one-dimensional Lagrange interpolation.
 #[derive(Debug,Clone)]
 pub struct Lagrange1dInterpolator<T,U> {
     xa: Vec<T>,
@@ -19,6 +36,8 @@ pub struct Lagrange1dInterpolator<T,U> {
     diff_order: usize
 }
 
+/// The Lagrange1dInterpolatorVec hold the data for the computation of the univariate
+/// multidimensional Lagrange interpolation. It contains only a `Vec<Lagrange1dInterpolator>`.
 #[derive(Debug,Clone)]
 pub struct Lagrange1dInterpolatorVec<T,U> {
     lag1_interps: Vec<Lagrange1dInterpolator<T,U>>
@@ -26,6 +45,20 @@ pub struct Lagrange1dInterpolatorVec<T,U> {
 
 impl<T,U> Lagrange1dInterpolatorVec<T,U> where 
 T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
+    /// Returns a Lagrange1dInterpolatorVec for a serie of (xa,ya) interpolation data.
+    /// 
+    /// # Panics
+    /// 
+    /// This function will panic if the input sizes do not match, or if the individual
+    /// interpolation data are ill-formed.
+    /// 
+    /// # Example
+    /// 
+    /// '''
+    /// let xa = vec![vec![1.0,2.0,3.0],vec![1.5,2.5,3.5]];
+    /// let ya = vec![vec![1.0,1.1,1.2],vec![1.2,1.1,1.0]];
+    /// let i1d_vec = Lagrange1dInterpolatorVec::new(xa,ya);
+    /// '''
     pub fn new(xa: Vec<Vec<T>>, ya: Vec<Vec<U>>) -> Lagrange1dInterpolatorVec<T,U> {
         if xa.len() != ya.len() {
             panic!("Error initializing the vector-field interpolator: inputs sizes do not match");
@@ -35,37 +68,72 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
         };
     }
 
+    /// Evaluates a Lagrange1dInterpolatorVec at some `x`. The output is a vector
+    /// containing the value returned by each inner interpolator.
+    /// 
+    /// # Example
+    /// 
+    /// '''
+    /// let i1d_vec = ...;
+    /// let x = 0.0;
+    /// let val = i1d_vec.eval(&x);
+    /// '''
     pub fn eval(&self, x: &T) -> Vec<U> {
         return self.lag1_interps.iter().map(|interp| interp.eval(x)).collect::<Vec<U>>();
     }
 
+    /// Evaluates a Lagrange1dInterpolatorVec for multiple `x`. The result is a
+    /// vector of vectors containing the values returned by each inner interpolator.
+    /// 
+    /// # Example
+    /// 
+    /// '''
+    /// let i1d_vec = ...;
+    /// let x = [0.0,1.0];
+    /// let val = i1d_vec.eval(&x);
+    /// '''
     pub fn eval_vec(&self, x: &Vec<T>) -> Vec<Vec<U>> {
         // For each x-value, returns the value of all inner interpolators
         return x.iter().map(|x| self.eval(x)).collect::<Vec<_>>();
     }
     
+    /// Parallel version of `.eval_vec()`.
     pub fn par_eval_vec(&self, x: &Vec<T>) -> Vec<Vec<U>>{
         return (*x).par_iter().map(|xx| self.eval(xx)).collect::<Vec<_>>();
     }
 
+    /// Computes the first derivative of the current interpolator. The output is
+    /// a new Lagrange1dInterpolatorVec interpolating the values of the derivative
+    /// of the original inner interpolators.
+    /// 
+    /// # Example
+    /// 
+    /// '''
+    /// let i1d_vec = ...;
+    /// let i1d_vec_dx = i1d_vec.differentiate(); // new Lagrange1dInterpolatorVec
+    /// '''
     pub fn differentiate(&self) -> Lagrange1dInterpolatorVec<T,U> {
         return Lagrange1dInterpolatorVec {
             lag1_interps: self.lag1_interps.iter().map(|interp| interp.differentiate()).collect::<Vec<_>>()
         };
     }
 
+    /// Returns the inner Lagrange1dInterpolators in a vector.
     pub fn get_inner_interpolators(&self) -> Vec<Lagrange1dInterpolator<T, U>> {
         return self.lag1_interps.clone();
     }
 
+    /// Returns the order of the inner interpolators in a vector.
     pub fn order(&self) -> Vec<usize> {
         return self.lag1_interps.iter().map(|interp| interp.order()).collect::<Vec<_>>();
     }
 
+    /// Returns the length (<=> the number of nodes) of the inner interpolators in a vector.
     pub fn len(&self) -> Vec<usize> {
         return self.lag1_interps.iter().map(|interp| interp.len()).collect::<Vec<_>>();
     }
 
+    /// Returns the dimension of the interpolated univariate vector field.
     pub fn dim(&self) -> usize {
         return self.lag1_interps.len();
     }
