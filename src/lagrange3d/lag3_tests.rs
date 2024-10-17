@@ -66,4 +66,200 @@ pub fn lag3_interpolation() {
     assert!(err_df_dx1 < 1e-3);
     assert!(err_df_dx2 < 1e-3);
     assert!(err_df_dx3 < 1e-3);
+    assert_eq!(lag3_f.order(),(n1a-1,n2a-1,n3a-1));
+    assert_eq!(lag3_df_dx1.order(),(n1a-2,n2a-1,n3a-1));
+    assert_eq!(lag3_df_dx2.order(),(n1a-1,n2a-2,n3a-1));
+    assert_eq!(lag3_df_dx3.order(),(n1a-1,n2a-1,n3a-2));
+    assert_eq!(lag3_df_dx1.diff_order(),(1,0,0));
+    assert_eq!(lag3_df_dx2.diff_order(),(0,1,0));
+    assert_eq!(lag3_df_dx3.diff_order(),(0,0,1));
+}
+
+#[test]
+#[should_panic]
+pub fn lag3_input_size_mismatch() {
+    let x1a = vec![1.0,2.0,3.0];
+    let x2a = vec![1.0,2.0];
+    let x3a = vec![1.0,2.0,3.0];
+    let ya = vec![1.0; 3];
+
+    let _lag3_f = Lagrange3dInterpolator::new(x1a,x2a,x3a,ya);
+}
+
+#[test]
+#[should_panic]
+pub fn lag3_null_size_x1a_input() {
+    let x1a = Vec::new();
+    let x2a = vec![1.0,2.0,3.0];
+    let x3a = vec![1.0,2.0,3.0];
+    let ya = vec![1.0; 3];
+    let _lag3_f = Lagrange3dInterpolator::new(x1a,x2a,x3a,ya);
+}
+
+#[test]
+#[should_panic]
+pub fn lag3_null_size_x2a_input() {
+    let x1a = vec![1.0,2.0,3.0];
+    let x2a = Vec::new();
+    let x3a = vec![1.0,2.0,3.0];
+    let ya = vec![1.0; 3];
+    let _lag3_f = Lagrange3dInterpolator::new(x1a,x2a,x3a,ya);
+}
+
+#[test]
+#[should_panic]
+pub fn lag3_null_size_x3a_input() {
+    let x1a = vec![1.0,2.0,3.0];
+    let x2a = vec![1.0,2.0,3.0];
+    let x3a = Vec::new();
+    let ya = vec![1.0; 3];
+    let _lag3_f = Lagrange3dInterpolator::new(x1a,x2a,x3a,ya);
+}
+
+#[test]
+#[should_panic]
+pub fn lag3_null_size_ya_input() {
+    let x1a: Vec<f64> = vec![1.0,2.0];
+    let x2a = vec![1.0,2.0];
+    let x3a = vec![1.0,2.0];
+    let ya: Vec<f64> = Vec::new();
+    let _lag2_f = Lagrange3dInterpolator::new(x1a, x2a, x3a, ya);
+}
+
+#[test]
+#[should_panic]
+pub fn lag3_duplicate_entries_x1a_input() {
+    let x1a: Vec<f64> = vec![1.0,1.0,2.0];
+    let x2a = vec![1.0,2.0];
+    let x3a = vec![1.0,2.0];
+    let ya: Vec<f64> = vec![1.0;12];
+    let _lag2_f = Lagrange3dInterpolator::new(x1a, x2a, x3a, ya);
+}
+
+#[test]
+#[should_panic]
+pub fn lag3_duplicate_entries_x2a_input() {
+    let x1a: Vec<f64> = vec![1.0,2.0];
+    let x2a = vec![1.0,1.0,2.0];
+    let x3a = vec![1.0,2.0];
+    let ya: Vec<f64> = vec![1.0;12];
+    let _lag2_f = Lagrange3dInterpolator::new(x1a, x2a, x3a, ya);
+}
+
+#[test]
+#[should_panic]
+pub fn lag3_duplicate_entries_x3a_input() {
+    let x1a: Vec<f64> = vec![1.0,2.0];
+    let x2a = vec![1.0,2.0];
+    let x3a = vec![1.0,1.0,2.0];
+    let ya: Vec<f64> = vec![1.0;12];
+    let _lag2_f = Lagrange3dInterpolator::new(x1a, x2a, x3a, ya);
+}
+
+#[test]
+pub fn lag3_add_operators() {
+    // 
+    let f1 = |x1: f64, x2: f64, x3: f64| 1.0+x1+1.5*x2-3.0*(x1*x2+x1*x3-x1*x2);
+    let f2 = |x1: f64, x2: f64, x3: f64| x1.powi(3)+x1.powi(2)*x2+x1*x2.powi(2)+x1.powi(2)*x3+x1*x3.powi(2)+x2.powi(3)+x2.powi(2)*x3+x2*x3.powi(2)+x3.powi(3);
+    let f1plusf2 = |x1: f64, x2: f64, x3: f64| f1(x1,x2,x3) + f2(x1,x2,x3);
+    // 
+    let (a,b) = (-1.0,1.0);
+    let (n1,n2) = (3,4);
+    let (x1,x2) = (gauss_chebyshev_nodes(&n1, &a, &b), gauss_chebyshev_nodes(&n2, &a, &b));
+    // 
+    let ni = 20;
+    let xi = linspace(&ni, &a, &b);
+    // 
+    let y1 = x1.iter().map(|x| x1.iter().map(|y| x1.iter().map(|z| f1(*x,*y,*z))).flatten()).flatten().collect::<Vec<_>>();
+    let y2 = x2.iter().map(|x| x2.iter().map(|y| x2.iter().map(|z| f2(*x,*y,*z))).flatten()).flatten().collect::<Vec<_>>();
+    let y12 = x2.iter().map(|x| x2.iter().map(|y| x2.iter().map(|z| f1plusf2(*x,*y,*z))).flatten()).flatten().collect::<Vec<_>>();
+    // 
+    let interp1 = Lagrange3dInterpolator::new(x1.clone(), x1.clone(), x1.clone(), y1);
+    let interp2 = Lagrange3dInterpolator::new(x2.clone(), x2.clone(), x2.clone(), y2);
+    let interp12 = interp1+interp2;
+    let interp12_ref = Lagrange3dInterpolator::new(x2.clone(), x2.clone(), x2.clone(), y12);
+    let (y_cal,y_ref) = (interp12.eval_grid(&xi, &xi, &xi),interp12_ref.eval_grid(&xi,&xi, &xi));
+    let err = y_cal.iter().zip(y_ref.iter()).map(|(&a,&b)| (a-b).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap();
+    assert!(err < 1e-14);
+}
+
+#[test]
+pub fn lag3_sub_operators() {
+    // 
+    let f1 = |x1: f64, x2: f64, x3: f64| 1.0+x1+1.5*x2-3.0*(x1*x2+x1*x3-x1*x2);
+    let f2 = |x1: f64, x2: f64, x3: f64| x1.powi(3)+x1.powi(2)*x2+x1*x2.powi(2)+x1.powi(2)*x3+x1*x3.powi(2)+x2.powi(3)+x2.powi(2)*x3+x2*x3.powi(2)+x3.powi(3);
+    let f1plusf2 = |x1: f64, x2: f64, x3: f64| f1(x1,x2,x3) - f2(x1,x2,x3);
+    // 
+    let (a,b) = (-1.0,1.0);
+    let (n1,n2) = (3,4);
+    let (x1,x2) = (gauss_chebyshev_nodes(&n1, &a, &b), gauss_chebyshev_nodes(&n2, &a, &b));
+    // 
+    let ni = 20;
+    let xi = linspace(&ni, &a, &b);
+    // 
+    let y1 = x1.iter().map(|x| x1.iter().map(|y| x1.iter().map(|z| f1(*x,*y,*z))).flatten()).flatten().collect::<Vec<_>>();
+    let y2 = x2.iter().map(|x| x2.iter().map(|y| x2.iter().map(|z| f2(*x,*y,*z))).flatten()).flatten().collect::<Vec<_>>();
+    let y12 = x2.iter().map(|x| x2.iter().map(|y| x2.iter().map(|z| f1plusf2(*x,*y,*z))).flatten()).flatten().collect::<Vec<_>>();
+    // 
+    let interp1 = Lagrange3dInterpolator::new(x1.clone(), x1.clone(), x1.clone(), y1);
+    let interp2 = Lagrange3dInterpolator::new(x2.clone(), x2.clone(), x2.clone(), y2);
+    let interp12 = interp1-interp2;
+    let interp12_ref = Lagrange3dInterpolator::new(x2.clone(), x2.clone(), x2.clone(), y12);
+    let (y_cal,y_ref) = (interp12.eval_grid(&xi, &xi, &xi),interp12_ref.eval_grid(&xi,&xi, &xi));
+    let err = y_cal.iter().zip(y_ref.iter()).map(|(&a,&b)| (a-b).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap();
+    assert!(err < 1e-14);
+}
+
+#[test]
+pub fn lag3_mul_operators() {
+    // 
+    let f1 = |x1: f64, x2: f64, x3: f64| 1.0+x1+1.5*x2-3.0*(x1*x2+x1*x3-x1*x2);
+    let f2 = |x1: f64, x2: f64, x3: f64| x1.powi(3)+x1.powi(2)*x2+x1*x2.powi(2)+x1.powi(2)*x3+x1*x3.powi(2)+x2.powi(3)+x2.powi(2)*x3+x2*x3.powi(2)+x3.powi(3);
+    let f1plusf2 = |x1: f64, x2: f64, x3: f64| f1(x1,x2,x3) * f2(x1,x2,x3);
+    // 
+    let (a,b) = (-1.0,1.0);
+    let (n1,n2) = (3,4);
+    let (x1,x2) = (gauss_chebyshev_nodes(&n1, &a, &b), gauss_chebyshev_nodes(&n2, &a, &b));
+    // 
+    let ni = 20;
+    let xi = linspace(&ni, &a, &b);
+    // 
+    let y1 = x1.iter().map(|x| x1.iter().map(|y| x1.iter().map(|z| f1(*x,*y,*z))).flatten()).flatten().collect::<Vec<_>>();
+    let y2 = x2.iter().map(|x| x2.iter().map(|y| x2.iter().map(|z| f2(*x,*y,*z))).flatten()).flatten().collect::<Vec<_>>();
+    let y12 = x2.iter().map(|x| x2.iter().map(|y| x2.iter().map(|z| f1plusf2(*x,*y,*z))).flatten()).flatten().collect::<Vec<_>>();
+    // 
+    let interp1 = Lagrange3dInterpolator::new(x1.clone(), x1.clone(), x1.clone(), y1);
+    let interp2 = Lagrange3dInterpolator::new(x2.clone(), x2.clone(), x2.clone(), y2);
+    let interp12 = interp1*interp2;
+    let interp12_ref = Lagrange3dInterpolator::new(x2.clone(), x2.clone(), x2.clone(), y12);
+    let (y_cal,y_ref) = (interp12.eval_grid(&xi, &xi, &xi),interp12_ref.eval_grid(&xi,&xi, &xi));
+    let err = y_cal.iter().zip(y_ref.iter()).map(|(&a,&b)| (a-b).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap();
+    assert!(err < 1e-14);
+}
+
+#[test]
+pub fn lag3_div_operators() {
+    // 
+    let f1 = |x1: f64, x2: f64, x3: f64| 1.0+x1+1.5*x2-3.0*(x1*x2+x1*x3-x1*x2);
+    let f2 = |x1: f64, x2: f64, x3: f64| 4.0+x1.powi(3)+x1.powi(2)*x2+x1*x2.powi(2)+x1.powi(2)*x3+x1*x3.powi(2)+x2.powi(3)+x2.powi(2)*x3+x2*x3.powi(2)+x3.powi(3);
+    let f1plusf2 = |x1: f64, x2: f64, x3: f64| f1(x1,x2,x3) / f2(x1,x2,x3);
+    // 
+    let (a,b) = (-1.0,1.0);
+    let (n1,n2) = (3,4);
+    let (x1,x2) = (gauss_chebyshev_nodes(&n1, &a, &b), gauss_chebyshev_nodes(&n2, &a, &b));
+    // 
+    let ni = 20;
+    let xi = linspace(&ni, &a, &b);
+    // 
+    let y1 = x1.iter().map(|x| x1.iter().map(|y| x1.iter().map(|z| f1(*x,*y,*z))).flatten()).flatten().collect::<Vec<_>>();
+    let y2 = x2.iter().map(|x| x2.iter().map(|y| x2.iter().map(|z| f2(*x,*y,*z))).flatten()).flatten().collect::<Vec<_>>();
+    let y12 = x2.iter().map(|x| x2.iter().map(|y| x2.iter().map(|z| f1plusf2(*x,*y,*z))).flatten()).flatten().collect::<Vec<_>>();
+    // 
+    let interp1 = Lagrange3dInterpolator::new(x1.clone(), x1.clone(), x1.clone(), y1);
+    let interp2 = Lagrange3dInterpolator::new(x2.clone(), x2.clone(), x2.clone(), y2);
+    let interp12 = interp1/interp2;
+    let interp12_ref = Lagrange3dInterpolator::new(x2.clone(), x2.clone(), x2.clone(), y12);
+    let (y_cal,y_ref) = (interp12.eval_grid(&xi, &xi, &xi),interp12_ref.eval_grid(&xi,&xi, &xi));
+    let err = y_cal.iter().zip(y_ref.iter()).map(|(&a,&b)| (a-b).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap();
+    assert!(err < 1e-14);
 }

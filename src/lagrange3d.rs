@@ -150,7 +150,7 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
         (self.x1a.len(),self.x2a.len(),self.x3a.len())
     }
     
-    pub fn diff_orderorder(&self) -> (usize,usize,usize) {
+    pub fn diff_order(&self) -> (usize,usize,usize) {
         (self.diff1_order,self.diff2_order,self.diff3_order)
     }
 
