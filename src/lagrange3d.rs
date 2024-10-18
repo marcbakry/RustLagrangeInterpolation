@@ -180,6 +180,16 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
     /// # Panics
     /// 
     /// This function will panic if the interpolation data is ill-formed.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let x1a = vec![1.0,2.0,3.0];
+    /// let x2a = vec![0.0,2.0];
+    /// let x3a = vec![0.0,2.0,4.0,6.0];
+    /// let ya = vec![1.0;3*2*4]; // interpolate a constant function
+    /// let i3d = Lagrange2dInterpolator::new(x1a,x2,x3a,ya);
+    /// ```
     pub fn new(x1a: Vec<T>, x2a: Vec<T>, x3a: Vec<T>, ya: Vec<U>) -> Lagrange3dInterpolator<T,U> {
         // 
         if x1a.len()*x2a.len()*x3a.len() != ya.len() {
