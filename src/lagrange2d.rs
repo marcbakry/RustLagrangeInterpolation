@@ -328,7 +328,7 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
     pub fn eval_arr(&self, x: &Vec<[T;2]>) -> Vec<U> {
         x.iter().map(|e| lag2_eval(&self.x1a, &self.x2a, &self.ya, &e[0], &e[1])).collect::<Vec<_>>()
     }
-/// Evaluates `self` on a set of nodes whose coorinates are given in a vector 
+    /// Evaluates `self` on a set of nodes whose coorinates are given in a vector 
     /// of size-two tuples.
     /// 
     /// # Example

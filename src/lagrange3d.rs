@@ -174,6 +174,12 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
 
 impl<T,U> Lagrange3dInterpolator<T,U> where
 T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
+    /// Returns a `Lagrange3dInterpolator` for some interpolation data `(x1a,x2a,x3a,ya)`.
+    /// See the introduction of the module for the convention between the input data.
+    /// 
+    /// # Panics
+    /// 
+    /// This function will panic if the interpolation data is ill-formed.
     pub fn new(x1a: Vec<T>, x2a: Vec<T>, x3a: Vec<T>, ya: Vec<U>) -> Lagrange3dInterpolator<T,U> {
         // 
         if x1a.len()*x2a.len()*x3a.len() != ya.len() {
@@ -218,62 +224,84 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
         };
     }
 
+    /// Returns the order of the interpolating polynomial in each direction
     pub fn order(&self) -> (usize,usize,usize) {
         (self.x1a.len()-1,self.x2a.len()-1,self.x3a.len()-1)
     }
     
+    /// Returns the number of interpolation nodes in each direction.
     pub fn len(&self) -> (usize,usize,usize) {
         (self.x1a.len(),self.x2a.len(),self.x3a.len())
     }
     
+    /// Returns the differentiation order with respect to each of the variables.
     pub fn diff_order(&self) -> (usize,usize,usize) {
         (self.diff1_order,self.diff2_order,self.diff3_order)
     }
 
+    /// Get a copy of the underlying interpolation data
     pub fn get_interp_data(&self) -> (Vec<T>,Vec<T>,Vec<T>,Vec<Vec<Vec<U>>>) {
         (self.x1a.clone(),self.x2a.clone(),self.x3a.clone(),self.ya.clone())
     }
 
+    /// Get a reference on the interpolation data
     pub fn get_interp_data_ref(&self) -> (&Vec<T>,&Vec<T>,&Vec<T>,&Vec<Vec<Vec<U>>>) {
         (&(self.x1a),&(self.x2a),&(self.x3a),&(self.ya))
     }
 
+    /// Evaluates the interpolator at some `(x1,x2,x3)`.
     pub fn eval(&self, x1: &T, x2: &T, x3: &T) -> U {
         lag3_eval(&self.x1a, &self.x2a, &self.x3a, &self.ya, x1, x2, x3)
     }
 
+    /// Evaluates `self` on a grid given by `x1`, `x2` and `x3` following the same ordering
+    /// as the interpolation grid.
     pub fn eval_grid(&self, x1: &Vec<T>, x2: &Vec<T>, x3: &Vec<T>) -> Vec<U> {
         lag3_eval_grid(&self.x1a, &self.x2a, &self.x3a, &self.ya, x1, x2,x3)
     }
 
+    /// Evaluates `self` on a set of nodes whose coordinates are given in two separate vectors.
+    /// The length of `x1`, `x2` and `x3` must match.
     pub fn eval_vec(&self, x1: &Vec<T>, x2: &Vec<T>, x3: &Vec<T>) -> Vec<U> {
         lag3_eval_vec(&self.x1a, &self.x2a, &self.x3a, &self.ya, x1, x2, x3)
     }
     
+    /// Evaluates `self` on a set of nodes whose coorinates are given in a vector 
+    /// of size-two arrays.
     pub fn eval_arr(&self, x: &Vec<[T;3]>) -> Vec<U> {
         x.iter().map(|e| lag3_eval(&self.x1a, &self.x2a, &self.x3a, &self.ya, &e[0], &e[1],&e[2])).collect::<Vec<_>>()
     }
 
+    /// Evaluates `self` on a set of nodes whose coorinates are given in a vector 
+    /// of size-two tuples.
     pub fn eval_tup(&self, x: &Vec<(T,T,T)>) -> Vec<U> {
         x.iter().map(|e| lag3_eval(&self.x1a, &self.x2a, &self.x3a, &self.ya, &e.0, &e.1, &e.2)).collect::<Vec<_>>()
     }
 
+    /// Parallel version of `self.eval_grid()`.
     pub fn par_eval_grid(&self, x1: &Vec<T>, x2: &Vec<T>, x3: &Vec<T>) -> Vec<U> {
         (*x1).par_iter().flat_map_iter(|xx1| (*x2).iter().flat_map(|xx2| (*x3).iter().map(|xx3| self.eval(xx1, xx2, xx3)))).collect::<Vec<_>>()
     }
 
+    /// Parallel version of `self.eval_vec()`.
     pub fn par_eval_vec(&self, x1: &Vec<T>, x2: &Vec<T>, x3: &Vec<T>) -> Vec<U> {
         (*x1).par_iter().zip_eq((*x2).par_iter()).zip_eq((*x3).par_iter()).map(|((xx1,xx2),xx3)| self.eval(xx1, xx2, xx3)).collect::<Vec<_>>()
     }
 
+    /// Parallel version of `self.eval_arr()`.
     pub fn par_eval_arr(&self, x: &Vec<[T;3]>) -> Vec<U> {
         (*x).par_iter().map(|&xx| self.eval(&xx[0], &xx[1], &xx[2])).collect::<Vec<U>>()
     }
 
+    /// Parallel version of `self.eval_tup()`.
     pub fn par_eval_tup(&self, x: &Vec<(T,T,T)>) -> Vec<U> {
         (*x).par_iter().map(|&(x1,x2,x3)| self.eval(&x1,&x2,&x3)).collect::<Vec<_>>()
     }
 
+    /// Returns the partial derivative with respect to `x1` of `self` as a new `Lagrange3dInterpolator` 
+    /// on `self.len().0-1` nodes. If the length of the new interpolator falls 
+    /// to 0, it returns instead a `Lagrange3dInterpolator` with a single node
+    /// and the value 0.
     pub fn differentiate_x1(&self) -> Lagrange3dInterpolator<T, U> {
         // 
         let (x1a,x2a,x3a,ya) = self.get_interp_data();
@@ -298,6 +326,10 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
         }
     }
 
+    /// Returns the partial derivative with respect to `x2` of `self` as a new `Lagrange3dInterpolator` 
+    /// on `self.len().1-1` nodes. If the length of the new interpolator falls 
+    /// to 0, it returns instead a `Lagrange3dInterpolator` with a single node
+    /// and the value 0.
     pub fn differentiate_x2(&self) -> Lagrange3dInterpolator<T, U> {
         // 
         let (x1a,x2a,x3a,ya) = self.get_interp_data();
@@ -322,6 +354,10 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
         }
     }
 
+    /// Returns the partial derivative with respect to `x3` of `self` as a new `Lagrange3dInterpolator` 
+    /// on `self.len().2-1` nodes. If the length of the new interpolator falls 
+    /// to 0, it returns instead a `Lagrange3dInterpolator` with a single node
+    /// and the value 0.
     pub fn differentiate_x3(&self) -> Lagrange3dInterpolator<T, U> {
         // 
         let (x1a,x2a,x3a,ya) = self.get_interp_data();
@@ -346,6 +382,8 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
         }
     }
 
+    /// Computes the gradient of the interpolator and returns it as a
+    /// size-3 array.
     pub fn gradient(&self) -> [Lagrange3dInterpolator<T,U>;3] {
         return [self.differentiate_x1(),self.differentiate_x2(),self.differentiate_x3()] ;
     }
