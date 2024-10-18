@@ -1,3 +1,5 @@
+//! Doc is under construction
+
 extern crate num_traits;
 
 pub mod lag3_utilities;

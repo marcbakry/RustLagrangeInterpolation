@@ -1,4 +1,4 @@
-//! This module provides implementations of the univariate Lagrange interpolator for 
+//! This module provides implementations for the univariate Lagrange interpolator for 
 //! scalar (`Lagrange1dInterpolat`or) and vector (`Lagrange1dInterpolatorVec`) real/complex
 //! fields using the Rust standard library. It relies heavily on the `Vec` type.
 //! 
@@ -23,7 +23,8 @@
 //! # Cool features
 //! 
 //! All interpolators implement the `Add/AddAssign`, `Sub/SubAssign`, `Mul/MulAssign`, `Div/DivAssign` traits for
-//! a scalar value or another interpolator, thus allowing function-like manipulations.
+//! a scalar value or another interpolator *of the same kind*, thus allowing 
+//! function-like manipulations.
 //! 
 //! Parallel evaluation of the
 //! interpolator is available, based on the [rayon.rs](https://crates.io/crates/rayon) crate.

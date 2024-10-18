@@ -1,4 +1,4 @@
-//! This module provide implementations of the bivariate, **gridded**, Lagrange interpolator for
+//! This module provide implementations for the bivariate, **gridded**, Lagrange interpolator for
 //! scalar (`Lagrange2dInterpolat`or) and vector (`Lagrange2dInterpolatorVec`) real/complex
 //! fields using the Rust standard library. It relies heavily on the `Vec` type.
 //! 
@@ -25,7 +25,8 @@
 //! # Cool features
 //! 
 //! All interpolators implement the `Add/AddAssign`, `Sub/SubAssign`, `Mul/MulAssign`, `Div/DivAssign` traits for
-//! a scalar value or another interpolator, thus allowing function-like manipulations.
+//! a scalar value or another interpolator *of the same kind*, thus allowing 
+//! function-like manipulations.
 //! 
 //! Parallel evaluation of the interpolator is available, based on the [rayon.rs](https://crates.io/crates/rayon) crate.
 //! 
@@ -96,24 +97,60 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
 
     /// Evaluates `self` on a grid given by `x1` and `x2` following the same ordering
     /// as the interpolation grid.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let i2d_vec = ...;
+    /// let (x1,x2) = (linrange(&10,&0.0,&1.0),gauss_chebyshev_nodes(&50,&-5.1,&-4.0));
+    /// let val = i2d_vec.eval_grid(&x1,&x2);
+    /// ```
     pub fn eval_grid(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<Vec<U>>{
         return self.lag2_interps.iter().map(|interp| interp.eval_grid(x1, x2)).collect::<Vec<_>>();
     }
 
     /// Evaluates `self` on a set of nodes whose coordinates are given in two separate vectors.
     /// The length of `x1` and `x2` must match.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let i2d_vec = ...;
+    /// let (x1,x2) = (linrange(&10,&0.0,&1.0),gauss_chebyshev_nodes(&10,&-5.1,&-4.0));
+    /// let val = i2d_vec.eval_vec(&x1,&x2);
+    /// ```
     pub fn eval_vec(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<Vec<U>> {
         return self.lag2_interps.iter().map(|interp| interp.eval_vec(x1, x2)).collect::<Vec<_>>();
     }
     
     /// Evaluates `self` on a set of nodes whose coorinates are given in a vector 
     /// of size-two arrays.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let i12d_vec = ...;
+    /// let (x1,x2) = (linrange(&10,&0.0,&1.0),gauss_chebyshev_nodes(&10,&-5.1,&-4.0));
+    /// let val = i2d_vec.eval(
+    ///         &(x1.iter().zip(x2.iter()).map(|(&x1,&x2)| [x1,x2]).collect::<Vec<_>>())
+    ///     );
+    /// ```
     pub fn eval_arr(&self, x: &Vec<[T;2]>) -> Vec<Vec<U>> {
         return self.lag2_interps.iter().map(|interp| interp.eval_arr(x)).collect::<Vec<_>>();
     }
 
     /// Evaluates `self` on a set of nodes whose coorinates are given in a vector 
     /// of size-two tuples.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let i1d = ...;
+    /// let (x1,x2) = (linrange(&10,&0.0,&1.0),gauss_chebyshev_nodes(&10,&-5.1,&-4.0));
+    /// let val = i1d.eval(
+    ///         &(x1.iter().zip(x2.iter()).map(|(&x1,&x2)| (x1,x2)).collect::<Vec<_>>())
+    ///     );
+    /// ```
     pub fn eval_tup(&self, x: &Vec<(T,T)>) -> Vec<Vec<U>> {
         return self.lag2_interps.iter().map(|interp| interp.eval_tup(x)).collect::<Vec<_>>();
     }
@@ -138,22 +175,36 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAss
         return self.lag2_interps.iter().map(|interp| interp.par_eval_tup(x)).collect::<Vec<_>>();
     }
 
+    /// Computes the jacobian matrix of `self` as a vector of `Lagrange2dInterpolator`s. We recall that 
+    /// the lines of the jacobian matrix hold the gradient of the associated component. Therefore, each
+    /// entry of the output of this function holds a 2-array containing the components of the gradient.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let i2d_vec = ...;
+    /// let jac = i2d_vec.jacobian();
+    /// ```
     pub fn jacobian(&self) -> Vec<[Lagrange2dInterpolator<T,U>;2]> {
         self.lag2_interps.iter().map(|interp| [interp.differentiate_x1(),interp.differentiate_x2()]).collect::<Vec<_>>()
     }
 
+    /// Get the inner interpolation data.
     pub fn get_inner_interpolators(&self) -> Vec<Lagrange2dInterpolator<T,U>> {
         return self.lag2_interps.clone();
     }
 
+    /// Returns the interpolation order of each inner interpolator.
     pub fn order(&self) -> Vec<(usize,usize)> {
         self.lag2_interps.iter().map(|interp| interp.order()).collect::<Vec<_>>()
     }
     
+    /// Returns the number of interpolation nodes in each direction for each inner interpolator.
     pub fn len(&self) -> Vec<(usize,usize)> {
         self.lag2_interps.iter().map(|interp| interp.len()).collect::<Vec<_>>()
     }
 
+    /// Returns the dimension of the interpolated data.
     pub fn dim(&self) -> usize {
         return self.lag2_interps.len();
     }
@@ -163,6 +214,21 @@ impl<T,U> Lagrange2dInterpolator<T,U> where
 T: LagRealTrait,
 i32: AsPrimitive<T>,
 U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
+    /// Returns a `Lagrange2dInterpolator` for some interpolation data `(x1a,x2a,ya)`.
+    /// See the introduction of the module for the convention between the input data.
+    /// 
+    /// # Panics
+    /// 
+    /// This function will panic if the interpolation data is ill-formed.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let x1a = vec![1.0,2.0,3.0];
+    /// let x2a = vec![0.0,2.0];
+    /// let ya = vec![1.0,1.1,1.2,1.3,1.4,1.5];
+    /// let i2d = Lagrange2dInterpolator::new(x1a,x2,ya);
+    /// ```
     pub fn new(x1a: Vec<T>, x2a: Vec<T>, ya: Vec<U>) -> Lagrange2dInterpolator<T,U> {
         // 
         if x1a.len()*x2a.len() != ya.len() {
@@ -190,61 +256,125 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
         return Lagrange2dInterpolator { x1a: x1a, x2a: x2a, ya: ya, diff1_order: 0, diff2_order: 0 };
     }
 
+    /// Returns the order of the interpolating polynomial in each direction
     pub fn order(&self) -> (usize,usize) {
         (self.x1a.len()-1,self.x2a.len()-1)
     }
     
+    /// Returns the number of interpolation nodes in each direction.
     pub fn len(&self) -> (usize,usize) {
         (self.x1a.len(),self.x2a.len())
     }
 
+    /// Returns the differentiation order with respect to each of the variables.
     pub fn diff_order(&self) -> (usize,usize) {
         (self.diff1_order,self.diff2_order)
     }
 
+    /// Get a copy of the underlying interpolation data
     pub fn get_interp_data(&self) -> (Vec<T>,Vec<T>,Vec<Vec<U>>) {
         (self.x1a.clone(),self.x2a.clone(),self.ya.clone())
     }
 
+    /// Get a reference on the interpolation data
     pub fn get_interp_data_ref(&self) -> (&Vec<T>,&Vec<T>,&Vec<Vec<U>>) {
         (&(self.x1a),&(self.x2a),&(self.ya))
     }
 
+    /// Evaluates the interpolator at some `(x1,x2)`.
     pub fn eval(&self,x1: &T, x2: &T) -> U {
         lag2_eval(&self.x1a, &self.x2a, &self.ya, x1, x2)
     }
 
+    /// Evaluates `self` on a grid given by `x1` and `x2` following the same ordering
+    /// as the interpolation grid.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let i2d = ...;
+    /// let (x1,x2) = (linrange(&10,&0.0,&1.0),gauss_chebyshev_nodes(&50,&-5.1,&-4.0));
+    /// let val = i2d.eval_grid(&x1,&x2);
+    /// ```
     pub fn eval_grid(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<U> {
         lag2_eval_grid(&self.x1a, &self.x2a, &self.ya, x1, x2)
     }
 
+    /// Evaluates `self` on a set of nodes whose coordinates are given in two separate vectors.
+    /// The length of `x1` and `x2` must match.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let i2d = ...;
+    /// let (x1,x2) = (linrange(&10,&0.0,&1.0),gauss_chebyshev_nodes(&10,&-5.1,&-4.0));
+    /// let val = i2d.eval_vec(&x1,&x2);
+    /// ```
     pub fn eval_vec(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<U> {
         lag2_eval_vec(&self.x1a, &self.x2a, &self.ya, x1, x2)
     }
+    /// Evaluates `self` on a set of nodes whose coorinates are given in a vector 
+    /// of size-two arrays.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let i12d = ...;
+    /// let (x1,x2) = (linrange(&10,&0.0,&1.0),gauss_chebyshev_nodes(&10,&-5.1,&-4.0));
+    /// let val = i2d.eval(
+    ///         &(x1.iter().zip(x2.iter()).map(|(&x1,&x2)| [x1,x2]).collect::<Vec<_>>())
+    ///     );
+    /// ```
     pub fn eval_arr(&self, x: &Vec<[T;2]>) -> Vec<U> {
         x.iter().map(|e| lag2_eval(&self.x1a, &self.x2a, &self.ya, &e[0], &e[1])).collect::<Vec<_>>()
     }
-
+/// Evaluates `self` on a set of nodes whose coorinates are given in a vector 
+    /// of size-two tuples.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let i12d = ...;
+    /// let (x1,x2) = (linrange(&10,&0.0,&1.0),gauss_chebyshev_nodes(&10,&-5.1,&-4.0));
+    /// let val = i2d.eval(
+    ///         &(x1.iter().zip(x2.iter()).map(|(&x1,&x2)| (x1,x2)).collect::<Vec<_>>())
+    ///     );
+    /// ```
     pub fn eval_tup(&self, x: &Vec<(T,T)>) -> Vec<U> {
         x.iter().map(|e| lag2_eval(&self.x1a, &self.x2a, &self.ya, &e.0, &e.1)).collect::<Vec<_>>()
     }
 
+    /// Parallel version of `self.eval_grid()`.
     pub fn par_eval_grid(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<U> {
         (*x1).par_iter().flat_map_iter(|xx1| (*x2).iter().map(|xx2| self.eval(xx1, xx2))).collect::<Vec<_>>()
     }
 
+    /// Parallel version of `self.eval_vec()`.
     pub fn par_eval_vec(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<U> {
         (*x1).par_iter().zip_eq((*x2).par_iter()).map(|(xx1,xx2)| self.eval(xx1,xx2)).collect::<Vec<U>>()
     }
 
+    /// Parallel version of `self.eval_arr()`.
     pub fn par_eval_arr(&self, x: &Vec<[T;2]>) -> Vec<U> {
         (*x).par_iter().map(|&xx| self.eval(&xx[0], &xx[1])).collect::<Vec<U>>()
     }
 
+    /// Parallel version of `self.eval_tup()`.
     pub fn par_eval_tup(&self, x: &Vec<(T,T)>) -> Vec<U> {
         (*x).par_iter().map(|&(x1,x2)| self.eval(&x1,&x2)).collect::<Vec<_>>()
     }
 
+    /// Returns the partial derivative with respect to `x1` of `self` as a new `Lagrange2dInterpolator` 
+    /// on `self.len().0-1` nodes. If the length of the new interpolator falls 
+    /// to 0, it returns instead a `Lagrange2dInterpolator` with a single node
+    /// and the value 0.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let i2d = ...;
+    /// let i2d_dx1 = i2d.differentiate_x1();
+    /// ```
     pub fn differentiate_x1(&self) -> Lagrange2dInterpolator<T, U> {
         // 
         let (x1a,x2a, mut ya) = self.get_interp_data();
@@ -269,7 +399,18 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
             return output;
         }
     }
-    
+
+    /// Returns the partial derivative with respect to `x2` of `self` as a new `Lagrange2dInterpolator` 
+    /// on `self.len().1-1` nodes. If the length of the new interpolator falls 
+    /// to 0, it returns instead a `Lagrange2dInterpolator` with a single node
+    /// and the value 0.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let i2d = ...;
+    /// let i2d_dx2 = i2d.differentiate_x2();
+    /// ```
     pub fn differentiate_x2(&self) -> Lagrange2dInterpolator<T, U> {
         // 
         let (x1a,x2a, mut ya) = self.get_interp_data();
@@ -295,6 +436,8 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
         }
     }
 
+    /// Computes the gradient of the interpolator and returns it as a
+    /// size-2 array.
     pub fn gradient(&self) -> [Lagrange2dInterpolator<T,U>;2] {
         return [self.differentiate_x1(),self.differentiate_x2()];
     }
