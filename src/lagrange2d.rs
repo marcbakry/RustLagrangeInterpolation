@@ -65,7 +65,7 @@ pub struct Lagrange2dInterpolatorVec<T,U> {
 
 impl<T,U> Lagrange2dInterpolatorVec<T,U> where
 T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
-    /// Returns as `Lagrange2dInterpolatorVec` for a serie of `(x1a,x2a,y)` interpolation data.
+    /// Returns as `Lagrange2dInterpolatorVec` for a serie of `(x1a,x2a,ya)` interpolation data.
     /// 
     /// # Panics
     /// 
