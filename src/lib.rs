@@ -15,6 +15,14 @@
 //! Lagrange polynomials. It is a lot of sugar-coating interface around the low-level API
 //! which can be found in the `lagX_utilies` modules.
 //! 
+//! 
+//! # Arithmetic operators
+//! 
+//! This crate implements the four basic arithmetic operators (`+`,`-`,`*`,`/`)
+//! for both scalars and other interpolators of the same kind. **See the doc of the corresponding traits
+//! implementations for the `Lagrange1dInterpolator` structure for more details**, all other implementations 
+//! work in the same fashion.
+//! 
 //! # How-To
 //! 
 //! The API is designed to be really easy to use. Most users will want to initialize a 
@@ -24,7 +32,7 @@
 //! Some useful functions are provided in the `utilites` crate, for example to initialize 
 //! a set of interpolation nodes.
 //! 
-//! While prefer to refer to the `example` module, we give the general process for a 
+//! While we prefer to refer to the `example` module, we give the general process for a 
 //! simple one-dimensional interpolation of a scalar sine-function.
 //! 
 //! ```
