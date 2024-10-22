@@ -10,8 +10,8 @@ use std::fmt::Display;
 use std::ops::AddAssign;
 
 /// Trait allowing the support of floating point data
-pub trait LagRealTrait: 'static + Copy+Float+AsPrimitive<f64>+PartialOrd+Display+Send+Sync {}
-impl<T> LagRealTrait for T where T: 'static + Copy+Float+AsPrimitive<f64>+PartialOrd+Display+Send+Sync {}
+pub trait LagRealTrait: 'static + Copy+Float+AsPrimitive<f64>+PartialOrd+Display+Send+Sync+std::iter::Product {}
+impl<T> LagRealTrait for T where T: 'static + Copy+Float+AsPrimitive<f64>+PartialOrd+Display+Send+Sync+std::iter::Product {}
 
 /// Trait allowing the support of floating point real or complex data 
 pub trait LagComplexTrait: 'static + NumCast + AddAssign + ComplexFloat + Send + Sync {}
@@ -112,6 +112,18 @@ pub fn linspace<T:LagRealTrait>(n: &usize, a:&T, b: &T) -> Vec<T> {
     (0..*n).map(|i| *a + T::from(i).unwrap()*stp).collect::<Vec<_>>()
 }
 
+/// Computes the weights for the barycentric formula: w_j = \Pi_{m=0,m!=j}{1.0/(x[j]-x[m])}
+/// 
+/// # Example
+/// 
+/// ```
+/// let x = linspace(&3,&-1.0,&1.0);
+/// let w = barycentric_weights(&x);
+/// ```
+pub fn barycentric_weights<T: LagRealTrait>(x: &Vec<T>) -> Vec<T> {
+    x.iter().enumerate().map(|(j,&xj)| x.iter().enumerate().filter(|(m,_)| j != *m).map(|(_,&xm)| one::<T>()/(xj - xm)).product::<T>()).collect::<Vec<_>>()
+}
+
 #[doc(hidden)]
 fn rescale_range<T: LagRealTrait>(a: &T, b: &T, x: &T) -> T where i32: AsPrimitive<T> {
     return ((*b-*a)*(*x) + *a + *b)/(2.as_());
@@ -164,5 +176,20 @@ pub mod utilities_tests {
     pub fn no_duplicates() {
         let x = vec![1.0,2.0,1.0,-3.0];
         check_duplicate(&x);
+    }
+
+    #[test]
+    pub fn accurate_barycentric_weights() {
+        let x = vec![0.0,0.25,0.5,1.0];
+        let w_ref = vec![
+            1.0/((0.0-0.25)*(0.0-0.5)*(0.0-1.0)),
+            1.0/((0.25-0.0)*(0.25-0.5)*(0.25-1.0)),
+            1.0/((0.5-0.0)*(0.5-0.25)*(0.5-1.0)),
+            1.0/((1.0-0.0)*(1.0-0.25)*(1.0-0.5))
+        ];
+        let w = barycentric_weights(&x);
+        for i in 0..x.len() {
+            assert!(f64::abs(w[i]-w_ref[i]) < 1e-14);
+        }
     }
 }
