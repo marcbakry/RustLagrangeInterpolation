@@ -254,3 +254,22 @@ pub fn lag1_div_operators() {
     let (y_cal,y_ref) = (interp12.eval_vec(&xi),interp12_ref.eval_vec(&xi));
     assert!(y_cal.iter().zip(y_ref.iter()).all(|(&a,&b)| (a-b).abs() < 1e-4));
 }
+
+#[test]
+pub fn lag1_basis_extraction() {
+    let (a,b) = (0.0,1.0);
+    let na = 20;
+    let xa = gauss_chebyshev_nodes(&na, &a, &b);
+    let ya = xa.iter().map(|&x| x).collect::<Vec<f64>>();
+    let i1d = Lagrange1dInterpolator::new(xa.clone(),ya);
+    let i1d_basis = i1d.lagrange_basis();
+    for i in 0..i1d_basis.len() {
+        for j in 0..xa.len() {
+            if i != j {
+                assert!(i1d_basis[i].eval(&xa[j]).abs() < 1e-14);
+            } else {
+                assert!((i1d_basis[i].eval(&xa[j]) - 1.0).abs() < 1e-14);
+            }
+        }
+    }
+}

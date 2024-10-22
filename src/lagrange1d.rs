@@ -35,7 +35,7 @@ extern crate rayon;
 
 pub mod lag1_utilities;
 
-use num_traits::zero;
+use num_traits::{zero,one};
 use num_traits::AsPrimitive;
 use std::fmt::{Debug,Display,Formatter,Result};
 use std::ops::{Div,DivAssign,Mul,MulAssign,Add,AddAssign,Sub,SubAssign};
@@ -292,6 +292,25 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
                 diff_order: new_diff_order
             };
         }
+    }
+
+    /// Extracts the Lagrange basis out of the interpolator as a vector of `Lagrange1dInterpolator`s.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let (xa,ya) = (...,...)
+    /// let i1d = Lagrange1dInterpolator::new(xa,ya);
+    /// let basis = i1d.lagrange_basis(); // basis[i].eval(&(x[j])) == \delta_{ij}
+    /// ```
+    pub fn lagrange_basis(&self) -> Vec<Lagrange1dInterpolator<T,U>> {
+        (0..self.xa.len()).map(|i| 
+            Lagrange1dInterpolator::new(self.xa.clone(),(0..self.xa.len()).map(|j| if i != j {
+                zero::<U>()
+            } else {
+                one::<U>()
+            }).collect::<Vec<_>>())
+        ).collect::<Vec<_>>()
     }
 
     /// Computes the n-th derivative of `self` as a `Lagrange1dInterpolator` with length
