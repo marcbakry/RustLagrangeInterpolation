@@ -64,6 +64,8 @@
 //! 
 //! This crate is developped by a Rust newbie on his spare time for learning purposes. 
 //! Critics are welcome as long as they remain constructive.
+//! 
+//! As previously implied, this crate is not meant for performance, so anybody is encouraged to fork and improve the code.
 
 pub mod utilities;
 pub mod lagrange1d;

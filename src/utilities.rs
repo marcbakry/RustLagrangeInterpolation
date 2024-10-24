@@ -7,15 +7,15 @@ use num::{cast::AsPrimitive,complex::*};
 use num_traits::{Float,zero,NumCast,one};
 use std::cmp::PartialOrd;
 use std::fmt::Display;
-use std::ops::AddAssign;
+use std::ops::{AddAssign, DivAssign, MulAssign};
 
 /// Trait allowing the support of floating point data
-pub trait LagRealTrait: 'static + Copy+Float+AsPrimitive<f64>+PartialOrd+Display+Send+Sync+std::iter::Product {}
-impl<T> LagRealTrait for T where T: 'static + Copy+Float+AsPrimitive<f64>+PartialOrd+Display+Send+Sync+std::iter::Product {}
+pub trait LagRealTrait: 'static + Copy+Float+AsPrimitive<f64>+PartialOrd+Display+Send+Sync+std::iter::Product+std::iter::Sum {}
+impl<T> LagRealTrait for T where T: 'static + Copy+Float+AsPrimitive<f64>+PartialOrd+Display+Send+Sync+std::iter::Product+std::iter::Sum {}
 
 /// Trait allowing the support of floating point real or complex data 
-pub trait LagComplexTrait: 'static + NumCast + AddAssign + ComplexFloat + Send + Sync {}
-impl<T> LagComplexTrait for T where T: 'static + NumCast + AddAssign + ComplexFloat + Send + Sync, <T as ComplexFloat>::Real: Float {}
+pub trait LagComplexTrait<U: LagRealTrait>: 'static + NumCast + AddAssign + ComplexFloat + Send + Sync + std::iter::Sum + std::ops::Mul<U,Output = Self> + std::ops::Div<U,Output = Self> + DivAssign<U> + MulAssign<U> {}
+impl<T,U> LagComplexTrait<U> for T where T: 'static + NumCast + AddAssign + ComplexFloat + Send + Sync + std::iter::Sum + std::ops::Mul<U,Output = Self> + std::ops::Div<U,Output = Self> + DivAssign<U> + MulAssign<U>, <T as ComplexFloat>::Real: Float, U: LagRealTrait {}
 
 /// Returns a vector containing the middle point of the input vector
 /// 

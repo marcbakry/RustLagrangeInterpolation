@@ -5,7 +5,6 @@ use crate::lagrange1d::lag1_utilities::*;
 use crate::lagrange2d::lag2_utilities::*;
 
 use num_traits::zero;
-use std::ops::{DivAssign, MulAssign};
 
 
 /// Evaluation of the `Lagrange3dInterpolator` with the data `(x1a,x2a,x3a,ya)` at `(x1,x2,x3)`.
@@ -18,7 +17,7 @@ use std::ops::{DivAssign, MulAssign};
 pub fn lag3_eval<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, x3a: &Vec<T>, ya: &Vec<Vec<Vec<U>>>, x1: &T, x2: &T, x3: &T) -> U 
 where 
 T: LagRealTrait,
-U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
+U: LagComplexTrait<T> {
     lag1_eval(x1a, &ya.iter().map(|e| lag2_eval(x2a,x3a,e,x2,x3)).collect::<Vec<U>>(),x1)
 }
 
@@ -33,7 +32,7 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
 pub fn lag3_eval_grid<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, x3a: &Vec<T>, ya: &Vec<Vec<Vec<U>>>, x1: &Vec<T>, x2: &Vec<T>, x3: &Vec<T>) -> Vec<U>
 where 
 T: LagRealTrait,
-U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
+U: LagComplexTrait<T>  {
     // 
     let mut res = vec![zero::<U>();x1.len()*x2.len()*x3.len()];
     for i1 in 0..x1.len() {
@@ -58,7 +57,7 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
 pub fn lag3_eval_vec<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, x3a: &Vec<T>, ya: &Vec<Vec<Vec<U>>>, x1: &Vec<T>, x2: &Vec<T>, x3: &Vec<T>) -> Vec<U>
 where 
 T: LagRealTrait,
-U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
+U: LagComplexTrait<T>  {
     // 
     if x1.len() != x2.len() || x1.len() != x3.len() {
         panic!("Input error: x1 and x2 and x3 should have the same length.");
@@ -74,7 +73,7 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
 pub fn lag3_diff1<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, x3a: &Vec<T>, ya: &Vec<Vec<Vec<U>>>, x1: &T, x2: &T, x3: &T) -> U 
 where 
 T: LagRealTrait,
-U: LagComplexTrait + DivAssign<T> + MulAssign<T> {    
+U: LagComplexTrait<T> {    
     lag1_eval(x1a, 
         &ya.iter().enumerate().map(
         |(idx,val)| U::from(partial_sum(x1a, x1, idx)).unwrap()*lag2_eval(x2a, x3a, val, x2, x3)
@@ -91,7 +90,7 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
 pub fn lag3_diff1_grid<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, x3a: &Vec<T>, ya: &Vec<Vec<Vec<U>>>, x1: &Vec<T>, x2: &Vec<T>, x3: &Vec<T>) -> Vec<U>
 where 
 T: LagRealTrait,
-U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
+U: LagComplexTrait<T>  {
     // 
     let mut res = vec![zero::<U>();x1.len()*x2.len()*x3.len()];
     for i1 in 0..x1.len() {
@@ -113,7 +112,7 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
 pub fn lag3_diff2<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, x3a: &Vec<T>, ya: &Vec<Vec<Vec<U>>>, x1: &T, x2: &T, x3: &T) -> U 
 where 
 T: LagRealTrait,
-U: LagComplexTrait + DivAssign<T> + MulAssign<T> {  
+U: LagComplexTrait<T> {  
     lag1_eval(x1a, &ya.iter().map(|e| lag2_diff1(x2a, x3a, e, x2, x3)).collect::<Vec<U>>(), x1)
 }
 
@@ -126,7 +125,7 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
 pub fn lag3_diff2_grid<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, x3a: &Vec<T>, ya: &Vec<Vec<Vec<U>>>, x1: &Vec<T>, x2: &Vec<T>, x3: &Vec<T>) -> Vec<U>
 where 
 T: LagRealTrait,
-U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
+U: LagComplexTrait<T>  {
     // 
     let mut res = vec![zero::<U>();x1.len()*x2.len()*x3.len()];
     for i1 in 0..x1.len() {
@@ -148,7 +147,7 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
 pub fn lag3_diff3<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, x3a: &Vec<T>, ya: &Vec<Vec<Vec<U>>>, x1: &T, x2: &T, x3: &T) -> U 
 where 
 T: LagRealTrait,
-U: LagComplexTrait + DivAssign<T> + MulAssign<T> {  
+U: LagComplexTrait<T> {  
     lag1_eval(x1a, &ya.iter().map(|e| lag2_diff2(x2a, x3a, e, x2, x3)).collect::<Vec<U>>(), x1)
 }
 
@@ -161,7 +160,7 @@ U: LagComplexTrait + DivAssign<T> + MulAssign<T> {
 pub fn lag3_diff3_grid<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, x3a: &Vec<T>, ya: &Vec<Vec<Vec<U>>>, x1: &Vec<T>, x2: &Vec<T>, x3: &Vec<T>) -> Vec<U>
 where 
 T: LagRealTrait,
-U: LagComplexTrait + DivAssign<T> + MulAssign<T>  {
+U: LagComplexTrait<T>  {
     // 
     let mut res = vec![zero::<U>();x1.len()*x2.len()*x3.len()];
     for i1 in 0..x1.len() {
