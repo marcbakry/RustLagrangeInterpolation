@@ -132,7 +132,7 @@ T: LagRealTrait,
 U: LagComplexTrait<T>  {
     lag1_eval(
         xa,
-        &ya.iter().enumerate().map(|(idx,&val)| val*U::from(partial_sum(xa,x,idx)).unwrap()).collect::<Vec<U>>(),
+        &ya.iter().enumerate().map(|(idx,&val)| val*partial_sum(xa,x,idx)).collect::<Vec<U>>(),
         x)
 }
 
@@ -144,8 +144,20 @@ U: LagComplexTrait<T>  {
     lag1_eval_barycentric(
         xa,
         wa,
-        &ya.iter().enumerate().map(|(idx,&val)| val*U::from(partial_sum(xa,x,idx)).unwrap()).collect::<Vec<U>>(),
+        &ya.iter().enumerate().map(|(idx,&val)| val*partial_sum(xa,x,idx)).collect::<Vec<U>>(),
         x)
+}
+
+/// Compute the derivative of the Lagrange basis functions.
+pub fn lag1_eval_barycentric_basis_derivative<T,U>(xa: &Vec<T>, wa: &Vec<T>, x: &T) -> Vec<U>
+where 
+T: LagRealTrait,
+U: LagComplexTrait<T>  {
+    let mut output = lag1_eval_barycentric_basis(wa, xa, x); // evaluate basis
+    for i in 0..wa.len() {
+        output[i] *= partial_sum(xa, x, i);
+    }
+    return output;
 }
 
 /// Evaluation of the first derivative of `Lagrange1dInterpolator` with the data `(xa,ya)` at values in a vector `x`.
@@ -169,4 +181,12 @@ where
 T: LagRealTrait,
 U: LagComplexTrait<T> {
     x.iter().map(|e| lag1_eval_derivative_barycentric(xa, wa, ya, e)).collect::<Vec<U>>()
+}
+
+/// Just like `lag1_eval_barycentric_basis_derivative`, but for a vector of `x`.
+pub fn lag1_eval_barycentric_basis_derivative_vec<T,U>(xa: &Vec<T>, wa: &Vec<T>, x: &Vec<T>) -> Vec<Vec<U>>
+where 
+T: LagRealTrait,
+U: LagComplexTrait<T>  {
+    x.iter().map(|e| lag1_eval_barycentric_basis_derivative(xa, wa, e)).collect::<Vec<_>>()
 }

@@ -335,6 +335,34 @@ U: LagComplexTrait<T> {
         ).collect::<Vec<_>>()
     }
 
+    /// Extracts the derivatives of the Lagrange basis functions as a vector of `Lagrange1dInterpolator`s.
+    pub fn differentiate_lagrange_basis(&self) -> Vec<Lagrange1dInterpolator<T,U>> {
+        // 
+        let new_diff_order  = self.diff_order() + 1;
+        // 
+        if self.order() == 0 { // if constant polynomial
+            return (0..self.len()).map(|_| Lagrange1dInterpolator {
+                xa: self.xa.clone(),
+                wa: self.wa.clone(),
+                ya: vec![zero::<U>(); self.len()],
+                diff_order: new_diff_order
+            }).collect::<Vec<_>>();
+        } else {
+            let xa_new = midpoints(&(self.xa));
+            let wa_new = barycentric_weights(&xa_new);
+            // compute the derivative of the basis functions etc.
+            // since lag1_eval_barycentric_bais_derivative_vec returns the value of all basis functions for
+            // each x, we use transpose_vec_of_vec to get the value for all x of each basis function
+            let ya_new = transpose_vec_of_vec(lag1_eval_barycentric_basis_derivative_vec(&(self.xa), &(self.wa), &xa_new));
+            ya_new.into_iter().map(|ya| Lagrange1dInterpolator{
+                xa: xa_new.clone(),
+                wa: wa_new.clone(),
+                ya: ya,
+                diff_order: new_diff_order
+            }).collect()
+        }
+    }
+
     /// Computes the n-th derivative of `self` as a `Lagrange1dInterpolator` with length
     /// `self.len()-n`.
     pub fn differentiate_n_times(&self, n: usize) -> Lagrange1dInterpolator<T,U> {

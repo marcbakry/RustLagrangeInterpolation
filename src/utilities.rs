@@ -124,6 +124,16 @@ pub fn barycentric_weights<T: LagRealTrait>(x: &Vec<T>) -> Vec<T> {
     x.iter().enumerate().map(|(j,&xj)| x.iter().enumerate().filter(|(m,_)| j != *m).map(|(_,&xm)| one::<T>()/(xj - xm)).product::<T>()).collect::<Vec<_>>()
 }
 
+/// Transpose of a Vec<Vec<_>> 
+pub fn transpose_vec_of_vec<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
+    assert!(!v.is_empty());
+    let len = v[0].len();
+    let mut iters: Vec<_> = v.into_iter().map(|n| n.into_iter()).collect();
+    (0..len).map(|_| {
+        iters.iter_mut().map(|n| n.next().unwrap()).collect()
+    }).collect()
+}
+
 #[doc(hidden)]
 fn rescale_range<T: LagRealTrait>(a: &T, b: &T, x: &T) -> T where i32: AsPrimitive<T> {
     return ((*b-*a)*(*x) + *a + *b)/(2.as_());
