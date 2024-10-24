@@ -351,9 +351,7 @@ U: LagComplexTrait<T> {
             let xa_new = midpoints(&(self.xa));
             let wa_new = barycentric_weights(&xa_new);
             // compute the derivative of the basis functions etc.
-            // since lag1_eval_barycentric_bais_derivative_vec returns the value of all basis functions for
-            // each x, we use transpose_vec_of_vec to get the value for all x of each basis function
-            let ya_new = transpose_vec_of_vec(lag1_eval_barycentric_basis_derivative_vec(&(self.xa), &(self.wa), &xa_new));
+            let ya_new = lag1_eval_barycentric_basis_derivative_vec(&(self.xa), &(self.wa), &xa_new);
             ya_new.into_iter().map(|ya| Lagrange1dInterpolator{
                 xa: xa_new.clone(),
                 wa: wa_new.clone(),

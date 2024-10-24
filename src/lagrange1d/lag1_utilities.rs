@@ -1,6 +1,6 @@
 //! Module containing the low-level functions for the construction and the evaluation
 //! of the `Lagrange1dInterpolator`.
-use super::super::utilities::{partial_sum,LagRealTrait,LagComplexTrait};
+use super::super::utilities::{partial_sum,transpose_vec_of_vec,LagRealTrait,LagComplexTrait};
 
 use num::one;
 use num_traits::zero;
@@ -115,7 +115,7 @@ pub fn lag1_eval_barycentric_basis_vec<T,U>(wa: &Vec<T>, xa: &Vec<T>, x: &Vec<T>
 where 
 T: LagRealTrait,
 U: LagComplexTrait<T> {
-    x.iter().map(|e| lag1_eval_barycentric_basis(wa, xa, e)).collect::<Vec<_>>()
+    transpose_vec_of_vec(x.iter().map(|e| lag1_eval_barycentric_basis(wa, xa, e)).collect::<Vec<_>>())
 }
 
 /// Evaluation of the first derivative of `Lagrange1dInterpolator` with the data `(xa,ya)` at `x`.
@@ -188,5 +188,5 @@ pub fn lag1_eval_barycentric_basis_derivative_vec<T,U>(xa: &Vec<T>, wa: &Vec<T>,
 where 
 T: LagRealTrait,
 U: LagComplexTrait<T>  {
-    x.iter().map(|e| lag1_eval_barycentric_basis_derivative(xa, wa, e)).collect::<Vec<_>>()
+    transpose_vec_of_vec(x.iter().map(|e| lag1_eval_barycentric_basis_derivative(xa, wa, e)).collect::<Vec<_>>())
 }

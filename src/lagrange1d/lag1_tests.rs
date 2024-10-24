@@ -256,7 +256,7 @@ pub fn lag1_div_operators() {
 }
 
 #[test]
-pub fn lag1_basis_extraction() {
+pub fn lag1_basis_as_interpolators() {
     let (a,b) = (0.0,1.0);
     let na = 20;
     let xa = gauss_chebyshev_nodes(&na, &a, &b);
@@ -272,4 +272,56 @@ pub fn lag1_basis_extraction() {
             }
         }
     }
+}
+
+#[test]
+pub fn lag1_lagrange_basis_and_derivatives() {
+    // 
+    let xa = vec![0.0,1.0,2.0];
+    let ya = vec![2.0;3];
+    let i1d = Lagrange1dInterpolator::new(xa.clone(), ya);
+    // references
+    let f0 = |x: f64| (x-xa[1])*(x-xa[2])/((xa[0]-xa[1])*(xa[0]-xa[2]));
+    let f1 = |x: f64| (x-xa[0])*(x-xa[2])/((xa[1]-xa[0])*(xa[1]-xa[2]));
+    let f2 = |x: f64| (x-xa[0])*(x-xa[1])/((xa[2]-xa[0])*(xa[2]-xa[1]));
+
+    let df0_dx = |x: f64| (x - xa[1] - xa[2])/((xa[0]-xa[1])*(xa[0]-xa[2]));
+    let df1_dx = |x: f64| (x - xa[0] - xa[2])/((xa[1]-xa[0])*(xa[1]-xa[2]));
+    let df2_dx = |x: f64| (x - xa[0] - xa[1])/((xa[2]-xa[0])*(xa[2]-xa[1]));
+    // 
+    let ni = 101;
+    let xi = linspace(&ni, &xa[0], &xa[2]);
+    // ---------------------------------
+    // evaluation of the basis functions
+    // ---------------------------------
+    let basis_value = i1d.eval_basis_vec(&xi);
+    // 1st basis function
+    let val_cal = &basis_value[0];
+    let val_ref = xi.iter().map(|&x| f0(x)).collect::<Vec<_>>();
+    assert!(val_cal.iter().zip(val_ref.iter()).map(|(&a,&b)| (a-b).abs()).min_by(|a,b| a.partial_cmp(b).unwrap()).unwrap() < 1e-14);
+    // 2nd basis function
+    let val_cal = &basis_value[1];
+    let val_ref = xi.iter().map(|&x| f1(x)).collect::<Vec<_>>();
+    assert!(val_cal.iter().zip(val_ref.iter()).map(|(&a,&b)| (a-b).abs()).min_by(|a,b| a.partial_cmp(b).unwrap()).unwrap() < 1e-14);
+    // 3rd basis function
+    let val_cal = &basis_value[2];
+    let val_ref = xi.iter().map(|&x| f2(x)).collect::<Vec<_>>();
+    assert!(val_cal.iter().zip(val_ref.iter()).map(|(&a,&b)| (a-b).abs()).min_by(|a,b| a.partial_cmp(b).unwrap()).unwrap() < 1e-14);
+
+    // -----------------------------
+    // evaluation of the derivatives
+    // -----------------------------
+    let i1d_basis_diff = i1d.differentiate_lagrange_basis();
+    // 1st basis function
+    let val_cal = i1d_basis_diff[0].eval_vec(&xi);
+    let val_ref = xi.iter().map(|&x| df0_dx(x)).collect::<Vec<_>>();
+    assert!(val_cal.iter().zip(val_ref.iter()).map(|(&a,&b)| (a-b).abs()).min_by(|a,b| a.partial_cmp(b).unwrap()).unwrap() < 1e-14);
+    // 2nd basis function
+    let val_cal = i1d_basis_diff[1].eval_vec(&xi);
+    let val_ref = xi.iter().map(|&x| df1_dx(x)).collect::<Vec<_>>();
+    assert!(val_cal.iter().zip(val_ref.iter()).map(|(&a,&b)| (a-b).abs()).min_by(|a,b| a.partial_cmp(b).unwrap()).unwrap() < 1e-14);
+    // 3rd basis function
+    let val_cal = i1d_basis_diff[2].eval_vec(&xi);
+    let val_ref = xi.iter().map(|&x| df2_dx(x)).collect::<Vec<_>>();
+    assert!(val_cal.iter().zip(val_ref.iter()).map(|(&a,&b)| (a-b).abs()).min_by(|a,b| a.partial_cmp(b).unwrap()).unwrap() < 1e-14);
 }
