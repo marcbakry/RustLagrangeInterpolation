@@ -1,5 +1,5 @@
 //! Module containing useful functions which do not fit particularly in more 
-//! specialized modules (equally spaced nodes, consistency checks, etc.).
+//! specialized modules (equally spaced nodes, barycentric weights computation, etc.).
 extern crate num_traits;
 extern crate num;
 
@@ -112,7 +112,7 @@ pub fn linspace<T:LagRealTrait>(n: &usize, a:&T, b: &T) -> Vec<T> {
     (0..*n).map(|i| *a + T::from(i).unwrap()*stp).collect::<Vec<_>>()
 }
 
-/// Computes the weights for the barycentric formula: w_j = \Pi_{m=0,m!=j}{1.0/(x[j]-x[m])}
+/// Computes the weights for the barycentric formula: `w_j = \Pi_{m=0,m!=j}{1.0/(x[j]-x[m])}`
 /// 
 /// # Example
 /// 

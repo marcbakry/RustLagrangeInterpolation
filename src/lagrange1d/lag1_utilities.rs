@@ -47,7 +47,7 @@ U: LagComplexTrait<T> {
 /// Evaluation of a `Lagrange1dInterpolator` using the *second form* of the barycentric formula 
 /// which has a better O(k) complexity than the other approach O(k^2). This formula reads
 /// 
-///     L(x) = \sum_{k=1}^n {w_k/(x - x_k) * y_k} / \sum{k=1}^n {w_k/(x - x_k)}
+/// (a)   `L(x) = \sum_{k=1}^n {w_k/(x - x_k) * y_k} / \sum{k=1}^n {w_k/(x - x_k)}`
 /// 
 /// In order to avoid a catastrophic cancellation when x == x_k, this equality is tested and
 /// the corresponding y_k value is returned when true.
@@ -81,6 +81,7 @@ U: LagComplexTrait<T>  {
     x.iter().map(|e| lag1_eval(xa, ya, e)).collect::<Vec<U>>()
 }
 
+/// Same as `lag1_eval_vec` but based on the barycentric formula
 pub fn lag1_eval_barycentric_vec<T,U>(xa: &Vec<T>, wa: &Vec<T>, ya: &Vec<U>, x: &Vec<T>) -> Vec<U> 
 where 
 T: LagRealTrait,
@@ -106,6 +107,7 @@ U: LagComplexTrait<T>  {
         x)
 }
 
+/// Same as `lag1_eval_derivative` but based on the barycentric formula
 pub fn lag1_eval_derivative_barycentric<T,U>(xa: &Vec<T>, wa: &Vec<T>, ya: &Vec<U>, x: &T) -> U 
 where 
 T: LagRealTrait,
@@ -132,6 +134,7 @@ U: LagComplexTrait<T> {
     x.iter().map(|e| lag1_eval_derivative(xa, ya, e)).collect::<Vec<U>>()
 }
 
+/// Same as `lag1_eval_derivative_vec` but based on the barycentric formula
 pub fn lag1_eval_derivative_barycentric_vec<T,U>(xa: &Vec<T>, wa: &Vec<T>, ya: &Vec<U>, x: &Vec<T>) -> Vec<U> 
 where 
 T: LagRealTrait,

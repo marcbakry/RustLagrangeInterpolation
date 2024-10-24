@@ -19,6 +19,7 @@ U: LagComplexTrait<T> {
     lag1_eval(x1a,&ya.iter().map(|e| lag1_eval(x2a,e,x2)).collect::<Vec<U>>(),x1)
 }
 
+/// Same as `lag2_eval` but based on the barycentric formula. See also `lag1_eval_barycentric`.
 pub fn lag2_eval_barycentric<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, w1a: &Vec<T>, w2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: &T, x2: &T) -> U 
 where 
 T: LagRealTrait,
@@ -45,6 +46,7 @@ U: LagComplexTrait<T>  {
     return x1.iter().zip(x2.iter()).map(|(x,y)| lag2_eval(x1a, x2a, ya, x, y)).collect::<Vec<_>>();
 }
 
+/// Same as `lag2_eval_vec` but based on the barycentric formula.
 pub fn lag2_eval_vec_barycentric<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, w1a: &Vec<T>, w2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: &Vec<T>, x2: &Vec<T>) -> Vec<U>
 where 
 T: LagRealTrait,
@@ -79,6 +81,7 @@ U: LagComplexTrait<T>  {
     return res;
 }
 
+/// Same as `lag2_eval_grid` but based on the barycentric formula.
 pub fn lag2_eval_grid_barycentric<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, w1a: &Vec<T>, w2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: &Vec<T>, x2: &Vec<T>) -> Vec<U>
 where 
 T: LagRealTrait,
@@ -106,6 +109,7 @@ U: LagComplexTrait<T>  {
     lag1_eval(x1a,&ya.iter().enumerate().map(|(idx,val)| U::from(partial_sum(x1a,x1,idx)).unwrap()*lag1_eval(x2a,val,x2)).collect::<Vec<U>>(),x1)
 }
 
+/// Same as `lag2_diff1` but based on the barycentric formula.
 pub fn lag2_diff1_barycentric<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, w1a: &Vec<T>, w2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: &T, x2: &T) -> U 
 where 
 T: LagRealTrait,
@@ -134,6 +138,7 @@ U: LagComplexTrait<T>  {
     return res;
 }
 
+/// Same as `lag2_eval_diff1_grid` but based on the barycentric formula.
 pub fn lag2_diff1_grid_barycentric<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, w1a: &Vec<T>, w2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: &Vec<T>, x2: &Vec<T>) -> Vec<U>
 where 
 T: LagRealTrait,
@@ -163,6 +168,7 @@ U: LagComplexTrait<T>  {
     }).collect::<Vec<U>>(),x1)
 }
 
+/// Same as `lag2_eval_diff2` but based on the barycentric formula.
 pub fn lag2_diff2_barycentric<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, w1a: &Vec<T>, w2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: &T, x2: &T) -> U 
 where 
 T: LagRealTrait,
@@ -193,6 +199,7 @@ U: LagComplexTrait<T>  {
     return res;
 }
 
+/// Same as `lag2_eval_diff2_grid` but based on the barycentric formula.
 pub fn lag2_diff2_grid_barycentric<T,U>(x1a: &Vec<T>, x2a: &Vec<T>, w1a: &Vec<T>, w2a: &Vec<T>, ya: &Vec<Vec<U>>, x1: &Vec<T>, x2: &Vec<T>) -> Vec<U>
 where 
 T: LagRealTrait,
