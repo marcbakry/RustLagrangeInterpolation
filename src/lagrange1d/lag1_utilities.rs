@@ -2,6 +2,7 @@
 //! of the `Lagrange1dInterpolator`.
 use super::super::utilities::{partial_sum,LagRealTrait,LagComplexTrait};
 
+use num::one;
 use num_traits::zero;
 
 /// Evaluation of the `Lagrange1dInterpolator` with the data `(xa,ya)` at `x`.
@@ -54,9 +55,7 @@ U: LagComplexTrait<T> {
 pub fn lag1_eval_barycentric<T,U>(xa: &Vec<T>, wa: &Vec<T>, ya: &Vec<U>, x: &T) -> U 
 where 
 T: LagRealTrait,
-U: LagComplexTrait<T>
-// +std::ops::Mul<T, Output=U>+std::ops::Div<T,Output=U> 
-{
+U: LagComplexTrait<T> {
     let mut coef = Vec::with_capacity(xa.len());
     for i in 0..xa.len() {
         let val = *x - xa[i];
@@ -67,6 +66,28 @@ U: LagComplexTrait<T>
         }
     }
     return coef.iter().zip(ya.iter()).map(|(&c,&y)| y*c).sum::<U>()/coef.iter().map(|&x| x).sum::<T>();
+}
+
+/// Evaluates the Lagrange basis functions at `x` and returns the result in a vector.
+pub fn lag1_eval_barycentric_basis<T,U>(wa: &Vec<T>, xa: &Vec<T>, x: &T) -> Vec<U> 
+where 
+T: LagRealTrait,
+U: LagComplexTrait<T> {
+    let mut coef = Vec::with_capacity(wa.len());
+    for i in 0..wa.len() {
+        let val = *x -  xa[i];
+        if val.abs() > T::from(1e-12).unwrap() {
+            coef.push(wa[i]/val);
+        } else {
+            return (0..wa.len()).map(|j| if j == i {
+                one::<U>()
+            } else {
+                zero::<U>()
+            }).collect::<Vec<_>>();
+        }
+    }
+    let den = coef.iter().map(|&x| x).sum::<T>();
+    return coef.iter().map(|&cc| one::<U>()*(cc/den)).collect::<Vec<_>>();
 }
 
 /// Evaluation of the `Lagrange1dInterpolator` with the data `(xa,ya)` for a vector `x`.
@@ -87,6 +108,14 @@ where
 T: LagRealTrait,
 U: LagComplexTrait<T>  {
     x.iter().map(|e| lag1_eval_barycentric(xa, wa, ya, e)).collect::<Vec<U>>()
+}
+
+/// Evaluates the Lagrange basis for a vector of values.
+pub fn lag1_eval_barycentric_basis_vec<T,U>(wa: &Vec<T>, xa: &Vec<T>, x: &Vec<T>) -> Vec<Vec<U>> 
+where 
+T: LagRealTrait,
+U: LagComplexTrait<T> {
+    x.iter().map(|e| lag1_eval_barycentric_basis(wa, xa, e)).collect::<Vec<_>>()
 }
 
 /// Evaluation of the first derivative of `Lagrange1dInterpolator` with the data `(xa,ya)` at `x`.

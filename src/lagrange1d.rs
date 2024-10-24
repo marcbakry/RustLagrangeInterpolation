@@ -245,6 +245,11 @@ U: LagComplexTrait<T> {
         lag1_eval_barycentric(&self.xa, &self.wa, &self.ya, x)
     }
 
+    /// Evaluates the Lagrange basis functions at some `x`.
+    pub fn eval_basis(&self, x: &T) -> Vec<U> {
+        lag1_eval_barycentric_basis(&self.wa, &self.xa, x)
+    }
+
     /// Same as `.eval()`, but for a vector of positions.
     /// 
     /// # Example
@@ -259,10 +264,19 @@ U: LagComplexTrait<T> {
         lag1_eval_barycentric_vec(&self.xa, &self.wa, &self.ya, &x)
     }
 
+    /// Evaluates the Lagrange basis functions for multiple `x`.
+    pub fn eval_basis_vec(&self, x: &Vec<T>) -> Vec<Vec<U>> {
+        lag1_eval_barycentric_basis_vec(&self.wa, &self.xa, x)
+    }
 
     /// Parallel version of `.eval_vec()`.
     pub fn par_eval_vec(&self, x: &Vec<T>) -> Vec<U>{
-        return (*x).par_iter().map(|xx| self.eval(xx)).collect::<Vec<U>>();
+        return (*x).par_iter().map(|xx| self.eval(xx)).collect::<Vec<_>>();
+    }
+
+    /// Parallel version of `.eval_basis_vec()`.
+    pub fn par_eval_basis_vec(&self, x: &Vec<T>) -> Vec<Vec<U>>{
+        return (*x).par_iter().map(|xx| self.eval_basis(xx)).collect::<Vec<_>>();
     }
 
     /// Returns the first derivative of `self` as a new `Lagrange1dInterpolator` 
