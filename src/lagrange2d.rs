@@ -50,6 +50,8 @@ use lag2_utilities::*;
 pub struct Lagrange2dInterpolator<T,U> {
     x1a: Vec<T>,
     x2a: Vec<T>,
+    w1a: Vec<T>,
+    w2a: Vec<T>,
     ya: Vec<Vec<U>>,
     diff1_order: usize,
     diff2_order: usize
@@ -244,6 +246,8 @@ U: LagComplexTrait<T> {
 
         let x1a = idx1a.iter().map(|&i| x1a[i]).collect::<Vec<T>>();
         let x2a = idx2a.iter().map(|&i| x2a[i]).collect::<Vec<T>>();
+        let w1a = barycentric_weights(&x1a);
+        let w2a = barycentric_weights(&x2a);
 
         let mut ya_sorted = Vec::with_capacity(x1a.len());
         for i1a in 0..x1a.len() {
@@ -253,7 +257,7 @@ U: LagComplexTrait<T> {
         }
         let ya = idx1a.into_iter().map(|idx| ya_sorted[idx].clone()).collect::<Vec<_>>();
         // 
-        return Lagrange2dInterpolator { x1a: x1a, x2a: x2a, ya: ya, diff1_order: 0, diff2_order: 0 };
+        return Lagrange2dInterpolator { x1a: x1a, x2a: x2a, w1a: w1a, w2a: w2a, ya: ya, diff1_order: 0, diff2_order: 0 };
     }
 
     /// Returns the order of the interpolating polynomial in each direction
@@ -283,7 +287,8 @@ U: LagComplexTrait<T> {
 
     /// Evaluates the interpolator at some `(x1,x2)`.
     pub fn eval(&self,x1: &T, x2: &T) -> U {
-        lag2_eval(&self.x1a, &self.x2a, &self.ya, x1, x2)
+        // lag2_eval(&self.x1a, &self.x2a, &self.ya, x1, x2)
+        lag2_eval_barycentric(&self.x1a, &self.x2a, &self.w1a, &self.w2a, &self.ya, x1, x2)
     }
 
     /// Evaluates `self` on a grid given by `x1` and `x2` following the same ordering
@@ -297,7 +302,8 @@ U: LagComplexTrait<T> {
     /// let val = i2d.eval_grid(&x1,&x2);
     /// ```
     pub fn eval_grid(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<U> {
-        lag2_eval_grid(&self.x1a, &self.x2a, &self.ya, x1, x2)
+        // lag2_eval_grid(&self.x1a, &self.x2a, &self.ya, x1, x2)
+        lag2_eval_grid_barycentric(&self.x1a, &self.x2a, &self.w1a, &self.w2a, &self.ya, x1, x2)
     }
 
     /// Evaluates `self` on a set of nodes whose coordinates are given in two separate vectors.
@@ -311,7 +317,8 @@ U: LagComplexTrait<T> {
     /// let val = i2d.eval_vec(&x1,&x2);
     /// ```
     pub fn eval_vec(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<U> {
-        lag2_eval_vec(&self.x1a, &self.x2a, &self.ya, x1, x2)
+        // lag2_eval_vec(&self.x1a, &self.x2a, &self.ya, x1, x2)
+        lag2_eval_vec_barycentric(&self.x1a, &self.x2a, &self.w1a, &self.w2a, &self.ya, x1, x2)
     }
     /// Evaluates `self` on a set of nodes whose coorinates are given in a vector 
     /// of size-two arrays.
@@ -326,8 +333,10 @@ U: LagComplexTrait<T> {
     ///     );
     /// ```
     pub fn eval_arr(&self, x: &Vec<[T;2]>) -> Vec<U> {
-        x.iter().map(|e| lag2_eval(&self.x1a, &self.x2a, &self.ya, &e[0], &e[1])).collect::<Vec<_>>()
+        // x.iter().map(|e| lag2_eval(&self.x1a, &self.x2a, &self.ya, &e[0], &e[1])).collect::<Vec<_>>()
+        x.iter().map(|e| lag2_eval_barycentric(&self.x1a, &self.x2a, &self.w1a, &self.w2a, &self.ya, &e[0], &e[1])).collect::<Vec<_>>()
     }
+
     /// Evaluates `self` on a set of nodes whose coorinates are given in a vector 
     /// of size-two tuples.
     /// 
@@ -341,11 +350,13 @@ U: LagComplexTrait<T> {
     ///     );
     /// ```
     pub fn eval_tup(&self, x: &Vec<(T,T)>) -> Vec<U> {
-        x.iter().map(|e| lag2_eval(&self.x1a, &self.x2a, &self.ya, &e.0, &e.1)).collect::<Vec<_>>()
+        // x.iter().map(|e| lag2_eval(&self.x1a, &self.x2a, &self.ya, &e.0, &e.1)).collect::<Vec<_>>()
+        x.iter().map(|e| lag2_eval_barycentric(&self.x1a, &self.x2a, &self.w1a, &self.w2a, &self.ya, &e.0, &e.1)).collect::<Vec<_>>()
     }
 
     /// Parallel version of `self.eval_grid()`.
     pub fn par_eval_grid(&self, x1: &Vec<T>, x2: &Vec<T>) -> Vec<U> {
+        // (*x1).par_iter().flat_map_iter(|xx1| (*x2).iter().map(|xx2| self.eval(xx1, xx2))).collect::<Vec<_>>()
         (*x1).par_iter().flat_map_iter(|xx1| (*x2).iter().map(|xx2| self.eval(xx1, xx2))).collect::<Vec<_>>()
     }
 
@@ -383,9 +394,12 @@ U: LagComplexTrait<T> {
         if self.x1a.len()-1 == 0 {
             ya.iter_mut().for_each(|y| y.iter_mut().for_each(|e| *e = zero::<U>()));
 
+            let (w1a,w2a) = (barycentric_weights(&x1a),barycentric_weights(&x2a));
             return Lagrange2dInterpolator {
                 x1a: x1a,
                 x2a: x2a,
+                w1a: w1a,
+                w2a: w2a,
                 ya: ya,
                 diff1_order: new_diff1_order,
                 diff2_order: self.diff2_order
@@ -419,9 +433,13 @@ U: LagComplexTrait<T> {
         if self.x2a.len()-1 == 0 {
             ya.iter_mut().for_each(|y| y.iter_mut().for_each(|e| *e = zero::<U>()));
 
+            let (w1a,w2a) = (barycentric_weights(&x1a),barycentric_weights(&x2a));
+
             return Lagrange2dInterpolator {
                 x1a: x1a,
                 x2a: x2a,
+                w1a: w1a,
+                w2a: w2a,
                 ya: ya,
                 diff1_order: self.diff1_order,
                 diff2_order: new_diff2_order

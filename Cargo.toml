@@ -11,3 +11,6 @@ rayon = "*"
 
 [profile.release]
 debug=0
+
+[lib]
+doctest = false

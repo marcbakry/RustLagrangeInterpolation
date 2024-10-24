@@ -81,6 +81,13 @@ U: LagComplexTrait<T>  {
     x.iter().map(|e| lag1_eval(xa, ya, e)).collect::<Vec<U>>()
 }
 
+pub fn lag1_eval_barycentric_vec<T,U>(xa: &Vec<T>, wa: &Vec<T>, ya: &Vec<U>, x: &Vec<T>) -> Vec<U> 
+where 
+T: LagRealTrait,
+U: LagComplexTrait<T>  {
+    x.iter().map(|e| lag1_eval_barycentric(xa, wa, ya, e)).collect::<Vec<U>>()
+}
+
 /// Evaluation of the first derivative of `Lagrange1dInterpolator` with the data `(xa,ya)` at `x`.
 /// 
 /// *Important:* This function does not perform any NaN check and may return `NaN` if `x` is
@@ -99,6 +106,17 @@ U: LagComplexTrait<T>  {
         x)
 }
 
+pub fn lag1_eval_derivative_barycentric<T,U>(xa: &Vec<T>, wa: &Vec<T>, ya: &Vec<U>, x: &T) -> U 
+where 
+T: LagRealTrait,
+U: LagComplexTrait<T>  {
+    lag1_eval_barycentric(
+        xa,
+        wa,
+        &ya.iter().enumerate().map(|(idx,&val)| val*U::from(partial_sum(xa,x,idx)).unwrap()).collect::<Vec<U>>(),
+        x)
+}
+
 /// Evaluation of the first derivative of `Lagrange1dInterpolator` with the data `(xa,ya)` at values in a vector `x`.
 /// 
 /// *Important:* This function does not perform any NaN check and may return `NaN` if `x` is
@@ -112,4 +130,11 @@ where
 T: LagRealTrait,
 U: LagComplexTrait<T> {
     x.iter().map(|e| lag1_eval_derivative(xa, ya, e)).collect::<Vec<U>>()
+}
+
+pub fn lag1_eval_derivative_barycentric_vec<T,U>(xa: &Vec<T>, wa: &Vec<T>, ya: &Vec<U>, x: &Vec<T>) -> Vec<U> 
+where 
+T: LagRealTrait,
+U: LagComplexTrait<T> {
+    x.iter().map(|e| lag1_eval_derivative_barycentric(xa, wa, ya, e)).collect::<Vec<U>>()
 }

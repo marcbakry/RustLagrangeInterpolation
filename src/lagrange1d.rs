@@ -49,6 +49,7 @@ use lag1_utilities::*;
 #[derive(Debug,Clone)]
 pub struct Lagrange1dInterpolator<T,U> {
     xa: Vec<T>,
+    wa: Vec<T>,
     ya: Vec<U>,
     diff_order: usize
 }
@@ -186,10 +187,12 @@ U: LagComplexTrait<T> {
         
         let indices = argsort(&xa);
         let xa = indices.iter().map(|&idx| xa[idx]).collect::<Vec<T>>();
+        let wa = barycentric_weights(&xa);
         let ya = indices.iter().map(|&idx| ya[idx]).collect::<Vec<U>>();
         // 
         return Lagrange1dInterpolator{
             xa: xa,
+            wa: wa,
             ya: ya,
             diff_order: 0
         };
@@ -238,7 +241,8 @@ U: LagComplexTrait<T> {
     /// let val = i1d.eval(&x);
     /// ```
     pub fn eval(&self, x: &T) -> U {
-        lag1_eval(&self.xa, &self.ya, x)
+        // lag1_eval(&self.xa, &self.ya, x)
+        lag1_eval_barycentric(&self.xa, &self.wa, &self.ya, x)
     }
 
     /// Same as `.eval()`, but for a vector of positions.
@@ -251,7 +255,8 @@ U: LagComplexTrait<T> {
     /// let val = i1d.eval_vec(&x);
     /// ```
     pub fn eval_vec(&self, x: &Vec<T>) -> Vec<U> {
-        lag1_eval_vec(&self.xa, &self.ya, &x)
+        // lag1_eval_vec(&self.xa, &self.ya, &x)
+        lag1_eval_barycentric_vec(&self.xa, &self.wa, &self.ya, &x)
     }
 
 
@@ -277,17 +282,20 @@ U: LagComplexTrait<T> {
         let new_diff_order = self.diff_order()+1;
 
         if self.order() == 0 {
+            let wa = barycentric_weights(&xa);
             return Lagrange1dInterpolator {
                 xa: xa,
+                wa: wa,
                 ya: vec![zero::<U>(); n],
                 diff_order: new_diff_order
             };
         } else {
             let xa_new = midpoints(&xa);
             let ya_new = lag1_eval_derivative_vec(&xa, &ya, &xa_new);
-
+            let wa_new = barycentric_weights(&xa_new);
             return Lagrange1dInterpolator{
                 xa: xa_new,
+                wa: wa_new,
                 ya: ya_new,
                 diff_order: new_diff_order
             };

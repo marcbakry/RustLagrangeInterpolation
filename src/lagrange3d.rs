@@ -53,6 +53,9 @@ pub struct Lagrange3dInterpolator<T,U> {
     x1a: Vec<T>,
     x2a: Vec<T>,
     x3a: Vec<T>,
+    w1a: Vec<T>,
+    w2a: Vec<T>,
+    w3a: Vec<T>,
     ya: Vec<Vec<Vec<U>>>,
     diff1_order: usize,
     diff2_order: usize,
@@ -210,6 +213,10 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait<T> {
         let x2a = idx2a.iter().map(|&i| x2a[i]).collect::<Vec<T>>();
         let x3a = idx3a.iter().map(|&i| x3a[i]).collect::<Vec<T>>();
 
+        let w1a = barycentric_weights(&x1a);
+        let w2a = barycentric_weights(&x2a);
+        let w3a = barycentric_weights(&x3a);
+
         let mut ya_sorted = Vec::with_capacity(x1a.len());
         for i1a in 0..x1a.len() {
             let mut tmp = Vec::with_capacity(x2a.len());
@@ -227,6 +234,9 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait<T> {
             x1a: x1a,
             x2a: x2a,
             x3a: x3a,
+            w1a: w1a,
+            w2a: w2a,
+            w3a: w3a,
             ya: ya,
             diff1_order: 0,
             diff2_order: 0,
@@ -261,31 +271,36 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait<T> {
 
     /// Evaluates the interpolator at some `(x1,x2,x3)`.
     pub fn eval(&self, x1: &T, x2: &T, x3: &T) -> U {
-        lag3_eval(&self.x1a, &self.x2a, &self.x3a, &self.ya, x1, x2, x3)
+        // lag3_eval(&self.x1a, &self.x2a, &self.x3a, &self.ya, x1, x2, x3)
+        lag3_eval_barycentric(&self.x1a, &self.x2a, &self.x3a, &self.w1a, &self.w2a, &self.w3a, &self.ya, x1, x2, x3)
     }
 
     /// Evaluates `self` on a grid given by `x1`, `x2` and `x3` following the same ordering
     /// as the interpolation grid.
     pub fn eval_grid(&self, x1: &Vec<T>, x2: &Vec<T>, x3: &Vec<T>) -> Vec<U> {
-        lag3_eval_grid(&self.x1a, &self.x2a, &self.x3a, &self.ya, x1, x2,x3)
+        // lag3_eval_grid(&self.x1a, &self.x2a, &self.x3a, &self.ya, x1, x2,x3)
+        lag3_eval_grid_barycentric(&self.x1a, &self.x2a, &self.x3a, &self.w1a, &self.w2a, &self.w3a, &self.ya, x1, x2,x3)
     }
 
     /// Evaluates `self` on a set of nodes whose coordinates are given in two separate vectors.
     /// The length of `x1`, `x2` and `x3` must match.
     pub fn eval_vec(&self, x1: &Vec<T>, x2: &Vec<T>, x3: &Vec<T>) -> Vec<U> {
-        lag3_eval_vec(&self.x1a, &self.x2a, &self.x3a, &self.ya, x1, x2, x3)
+        // lag3_eval_vec(&self.x1a, &self.x2a, &self.x3a, &self.ya, x1, x2, x3)
+        lag3_eval_vec_barycentric(&self.x1a, &self.x2a, &self.x3a, &self.w1a, &self.w2a, &self.w3a, &self.ya, x1, x2, x3)
     }
     
     /// Evaluates `self` on a set of nodes whose coorinates are given in a vector 
     /// of size-two arrays.
     pub fn eval_arr(&self, x: &Vec<[T;3]>) -> Vec<U> {
-        x.iter().map(|e| lag3_eval(&self.x1a, &self.x2a, &self.x3a, &self.ya, &e[0], &e[1],&e[2])).collect::<Vec<_>>()
+        // x.iter().map(|e| lag3_eval(&self.x1a, &self.x2a, &self.x3a, &self.ya, &e[0], &e[1],&e[2])).collect::<Vec<_>>()
+        x.iter().map(|e| lag3_eval_barycentric(&self.x1a, &self.x2a, &self.x3a, &self.w1a, &self.w2a, &self.w3a, &self.ya, &e[0], &e[1],&e[2])).collect::<Vec<_>>()
     }
 
     /// Evaluates `self` on a set of nodes whose coorinates are given in a vector 
     /// of size-two tuples.
     pub fn eval_tup(&self, x: &Vec<(T,T,T)>) -> Vec<U> {
-        x.iter().map(|e| lag3_eval(&self.x1a, &self.x2a, &self.x3a, &self.ya, &e.0, &e.1, &e.2)).collect::<Vec<_>>()
+        // x.iter().map(|e| lag3_eval(&self.x1a, &self.x2a, &self.x3a, &self.ya, &e.0, &e.1, &e.2)).collect::<Vec<_>>()
+        x.iter().map(|e| lag3_eval_barycentric(&self.x1a, &self.x2a, &self.x3a, &self.w1a, &self.w2a, &self.w3a, &self.ya, &e.0, &e.1, &e.2)).collect::<Vec<_>>()
     }
 
     /// Parallel version of `self.eval_grid()`.
