@@ -71,7 +71,7 @@ pub struct Lagrange3dInterpolatorVec<T,U> {
 }
 
 impl<T,U> Lagrange3dInterpolatorVec<T,U> where
-T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait<T> {
+T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + LagBasicArithmetic<T> {
     /// Returns as `Lagrange3dInterpolatorVec` for a serie of `(x1a,x2a,x3a,ya)` interpolation data.
     /// 
     /// # Panics
@@ -176,7 +176,7 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait<T> {
 }
 
 impl<T,U> Lagrange3dInterpolator<T,U> where
-T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait<T> {
+T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait + LagBasicArithmetic<T> {
     /// Returns a `Lagrange3dInterpolator` for some interpolation data `(x1a,x2a,x3a,ya)`.
     /// See the introduction of the module for the convention between the input data.
     /// 
@@ -341,7 +341,10 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait<T> {
             return zero_interp;
         } else {
             let x1a_new = midpoints(&x1a);
-            let ya_new = lag3_diff1_grid(&x1a, &x2a, &x3a, &ya, &x1a_new, &x2a, &x3a);
+            let w1a = barycentric_weights(&x1a);
+            let w2a = barycentric_weights(&x2a);
+            let w3a = barycentric_weights(&x3a);
+            let ya_new = lag3_diff1_grid_barycentric(&x1a, &x2a, &x3a, &w1a, &w2a, &w3a, &ya, &x1a_new, &x2a, &x3a);
 
             let mut output = Lagrange3dInterpolator::new(x1a_new,x2a,x3a,ya_new);
             output.diff1_order = new_diff1_order;
@@ -369,7 +372,10 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait<T> {
             return zero_interp;
         } else {
             let x2a_new = midpoints(&x2a);
-            let ya_new = lag3_diff2_grid(&x1a, &x2a, &x3a, &ya, &x1a, &x2a_new, &x3a);
+            let w1a = barycentric_weights(&x1a);
+            let w2a = barycentric_weights(&x2a);
+            let w3a = barycentric_weights(&x3a);
+            let ya_new = lag3_diff2_grid_barycentric(&x1a, &x2a, &x3a, &w1a, &w2a, &w3a, &ya, &x1a, &x2a_new, &x3a);
 
             let mut output = Lagrange3dInterpolator::new(x1a,x2a_new,x3a,ya_new);
             output.diff1_order = self.diff1_order;
@@ -397,7 +403,10 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait<T> {
             return zero_interp;
         } else {
             let x3a_new = midpoints(&x3a);
-            let ya_new = lag3_diff3_grid(&x1a, &x2a, &x3a, &ya, &x1a, &x2a, &x3a_new);
+            let w1a = barycentric_weights(&x1a);
+            let w2a = barycentric_weights(&x2a);
+            let w3a = barycentric_weights(&x3a);
+            let ya_new = lag3_diff3_grid_barycentric(&x1a, &x2a, &x3a, &w1a, &w2a, &w3a, &ya, &x1a, &x2a, &x3a_new);
 
             let mut output = Lagrange3dInterpolator::new(x1a,x2a,x3a_new,ya_new);
             output.diff1_order = self.diff1_order;
@@ -414,13 +423,13 @@ T: LagRealTrait, i32: AsPrimitive<T>, U: LagComplexTrait<T> {
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> Display for Lagrange3dInterpolator<T,U> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> Display for Lagrange3dInterpolator<T,U> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f,"Lagrange 2d gridded interpolator:\n- length = {} x {} x {}\n- differentiation order = ({},{},{})",self.x1a.len(),self.x2a.len(), self.x3a.len(),self.diff1_order,self.diff2_order,self.diff3_order)
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> Add<U> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> Add<U> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange3dInterpolator<T,U>;
     fn add(self, rhs: U) -> Self::Output {
         let (x1a,x2a,x3a,ya) = self.get_interp_data();
@@ -429,7 +438,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> Add<U> for Lagrange3dInterpolator<T
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> Add<Lagrange3dInterpolator<T,U>> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> Add<Lagrange3dInterpolator<T,U>> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange3dInterpolator<T,U>; 
     fn add(self, rhs: Lagrange3dInterpolator<T,U>) -> Self::Output {
         let (x1a_lhs,x2a_lhs,x3a_lhs,ya_lhs) = self.get_interp_data();
@@ -470,7 +479,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> Add<Lagrange3dInterpolator<T,U>> fo
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> AddAssign<U> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> AddAssign<U> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
     fn add_assign(&mut self, rhs: U) {
         for y in &mut self.ya {
             for yy in y {
@@ -482,7 +491,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> AddAssign<U> for Lagrange3dInterpol
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> Sub<U> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> Sub<U> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange3dInterpolator<T,U>;
     fn sub(self, rhs: U) -> Self::Output {
         let (x1a,x2a,x3a,ya) = self.get_interp_data();
@@ -491,7 +500,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> Sub<U> for Lagrange3dInterpolator<T
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> Sub<Lagrange3dInterpolator<T,U>> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> Sub<Lagrange3dInterpolator<T,U>> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange3dInterpolator<T,U>; 
     fn sub(self, rhs: Lagrange3dInterpolator<T,U>) -> Self::Output {
         let (x1a_lhs,x2a_lhs,x3a_lhs,ya_lhs) = self.get_interp_data();
@@ -532,7 +541,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> Sub<Lagrange3dInterpolator<T,U>> fo
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> SubAssign<U> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> SubAssign<U> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
     fn sub_assign(&mut self, rhs: U) {
         for y in &mut self.ya {
             for yy in y {
@@ -544,7 +553,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> SubAssign<U> for Lagrange3dInterpol
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> Mul<U> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> Mul<U> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange3dInterpolator<T,U>;
     fn mul(self, rhs: U) -> Self::Output {
         let (x1a,x2a,x3a,ya) = self.get_interp_data();
@@ -553,7 +562,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> Mul<U> for Lagrange3dInterpolator<T
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> Mul<Lagrange3dInterpolator<T,U>> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> Mul<Lagrange3dInterpolator<T,U>> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange3dInterpolator<T,U>; 
     fn mul(self, rhs: Lagrange3dInterpolator<T,U>) -> Self::Output {
         let (x1a_lhs,x2a_lhs,x3a_lhs,ya_lhs) = self.get_interp_data();
@@ -594,7 +603,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> Mul<Lagrange3dInterpolator<T,U>> fo
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> MulAssign<U> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> MulAssign<U> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
     fn mul_assign(&mut self, rhs: U) {
         for y in &mut self.ya {
             for yy in y {
@@ -606,7 +615,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> MulAssign<U> for Lagrange3dInterpol
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> Div<U> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> Div<U> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange3dInterpolator<T,U>;
     fn div(self, rhs: U) -> Self::Output {
         let (x1a,x2a,x3a,ya) = self.get_interp_data();
@@ -615,7 +624,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> Div<U> for Lagrange3dInterpolator<T
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> Div<Lagrange3dInterpolator<T,U>> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> Div<Lagrange3dInterpolator<T,U>> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange3dInterpolator<T,U>; 
     fn div(self, rhs: Lagrange3dInterpolator<T,U>) -> Self::Output {
         let (x1a_lhs,x2a_lhs,x3a_lhs,ya_lhs) = self.get_interp_data();
@@ -656,7 +665,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> Div<Lagrange3dInterpolator<T,U>> fo
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> DivAssign<U> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> DivAssign<U> for Lagrange3dInterpolator<T,U> where i32: AsPrimitive<T> {
     fn div_assign(&mut self, rhs: U) {
         for y in &mut self.ya {
             for yy in y {
@@ -669,7 +678,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> DivAssign<U> for Lagrange3dInterpol
 }
 
 // implementation of the basic operators for Lagrange3dInterpolatorVec
-impl<T: LagRealTrait, U: LagComplexTrait<T>> Add<U> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> Add<U> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange3dInterpolatorVec<T,U>;
 
     fn add(self, rhs: U) -> Self::Output {
@@ -679,7 +688,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> Add<U> for Lagrange3dInterpolatorVe
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> Add<Lagrange3dInterpolatorVec<T,U>> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> Add<Lagrange3dInterpolatorVec<T,U>> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange3dInterpolatorVec<T,U>;
 
     fn add(self, rhs: Lagrange3dInterpolatorVec<T,U>) -> Self::Output {
@@ -691,7 +700,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> Add<Lagrange3dInterpolatorVec<T,U>>
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> AddAssign<U> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> AddAssign<U> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     fn add_assign(&mut self, other: U) {
         for e in &mut self.lag3_interps {
             *e += other;
@@ -699,7 +708,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> AddAssign<U> for Lagrange3dInterpol
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> Sub<U> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> Sub<U> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange3dInterpolatorVec<T,U>;
 
     fn sub(self, rhs: U) -> Self::Output {
@@ -709,7 +718,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> Sub<U> for Lagrange3dInterpolatorVe
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> Sub<Lagrange3dInterpolatorVec<T,U>> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> Sub<Lagrange3dInterpolatorVec<T,U>> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange3dInterpolatorVec<T,U>;
 
     fn sub(self, rhs: Lagrange3dInterpolatorVec<T,U>) -> Self::Output {
@@ -721,7 +730,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> Sub<Lagrange3dInterpolatorVec<T,U>>
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> SubAssign<U> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> SubAssign<U> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     fn sub_assign(&mut self, other: U) {
         for e in &mut self.lag3_interps {
             *e -= other;
@@ -729,7 +738,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> SubAssign<U> for Lagrange3dInterpol
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> Mul<U> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> Mul<U> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange3dInterpolatorVec<T,U>;
 
     fn mul(self, rhs: U) -> Self::Output {
@@ -739,7 +748,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> Mul<U> for Lagrange3dInterpolatorVe
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> Mul<Lagrange3dInterpolatorVec<T,U>> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> Mul<Lagrange3dInterpolatorVec<T,U>> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange3dInterpolatorVec<T,U>;
 
     fn mul(self, rhs: Lagrange3dInterpolatorVec<T,U>) -> Self::Output {
@@ -751,7 +760,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> Mul<Lagrange3dInterpolatorVec<T,U>>
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> MulAssign<U> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> MulAssign<U> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     fn mul_assign(&mut self, other: U) {
         for e in &mut self.lag3_interps {
             *e *= other;
@@ -759,7 +768,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> MulAssign<U> for Lagrange3dInterpol
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> Div<U> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> Div<U> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange3dInterpolatorVec<T,U>;
 
     fn div(self, rhs: U) -> Self::Output {
@@ -769,7 +778,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> Div<U> for Lagrange3dInterpolatorVe
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> Div<Lagrange3dInterpolatorVec<T,U>> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> Div<Lagrange3dInterpolatorVec<T,U>> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     type Output = Lagrange3dInterpolatorVec<T,U>;
 
     fn div(self, rhs: Lagrange3dInterpolatorVec<T,U>) -> Self::Output {
@@ -781,7 +790,7 @@ impl<T: LagRealTrait, U: LagComplexTrait<T>> Div<Lagrange3dInterpolatorVec<T,U>>
     }
 }
 
-impl<T: LagRealTrait, U: LagComplexTrait<T>> DivAssign<U> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
+impl<T: LagRealTrait, U: LagComplexTrait + LagBasicArithmetic<T>> DivAssign<U> for Lagrange3dInterpolatorVec<T,U> where i32: AsPrimitive<T> {
     fn div_assign(&mut self, other: U) {
         for e in &mut self.lag3_interps {
             *e /= other;

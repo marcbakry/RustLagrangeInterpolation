@@ -285,9 +285,9 @@ pub fn lag1_lagrange_basis_and_derivatives() {
     let f1 = |x: f64| (x-xa[0])*(x-xa[2])/((xa[1]-xa[0])*(xa[1]-xa[2]));
     let f2 = |x: f64| (x-xa[0])*(x-xa[1])/((xa[2]-xa[0])*(xa[2]-xa[1]));
 
-    let df0_dx = |x: f64| (x - xa[1] - xa[2])/((xa[0]-xa[1])*(xa[0]-xa[2]));
-    let df1_dx = |x: f64| (x - xa[0] - xa[2])/((xa[1]-xa[0])*(xa[1]-xa[2]));
-    let df2_dx = |x: f64| (x - xa[0] - xa[1])/((xa[2]-xa[0])*(xa[2]-xa[1]));
+    let df0_dx = |x: f64| (2.0*x - xa[1] - xa[2])/((xa[0]-xa[1])*(xa[0]-xa[2]));
+    let df1_dx = |x: f64| (2.0*x - xa[0] - xa[2])/((xa[1]-xa[0])*(xa[1]-xa[2]));
+    let df2_dx = |x: f64| (2.0*x - xa[0] - xa[1])/((xa[2]-xa[0])*(xa[2]-xa[1]));
     // 
     let ni = 101;
     let xi = linspace(&ni, &xa[0], &xa[2]);

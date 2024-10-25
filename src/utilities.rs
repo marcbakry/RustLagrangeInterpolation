@@ -4,18 +4,22 @@ extern crate num_traits;
 extern crate num;
 
 use num::{cast::AsPrimitive,complex::*};
-use num_traits::{Float,zero,NumCast,one};
+use num_traits::{Float,zero,one};
 use std::cmp::PartialOrd;
 use std::fmt::Display;
-use std::ops::{AddAssign, DivAssign, MulAssign};
+use std::ops::{Add, Sub, Mul, Div, AddAssign, SubAssign, DivAssign, MulAssign};
+
+/// Trait for all basic arithmetic operations and assignments
+pub trait LagBasicArithmetic<U=Self>: Add<U,Output=Self>+Sub<U,Output=Self>+Div<U,Output=Self>+Mul<U,Output=Self>+AddAssign<U>+SubAssign<U>+MulAssign<U>+DivAssign<U> {}
+impl <T,U> LagBasicArithmetic<U> for T where T: Add<U,Output=Self>+Sub<U,Output=Self>+Div<U,Output=Self>+Mul<U,Output=Self>+AddAssign<U>+SubAssign<U>+MulAssign<U>+DivAssign<U> {}
 
 /// Trait allowing the support of floating point data
-pub trait LagRealTrait: 'static + Copy+Float+AsPrimitive<f64>+PartialOrd+Display+Send+Sync+std::iter::Product+std::iter::Sum {}
-impl<T> LagRealTrait for T where T: 'static + Copy+Float+AsPrimitive<f64>+PartialOrd+Display+Send+Sync+std::iter::Product+std::iter::Sum {}
+pub trait LagRealTrait: 'static + Float + Copy+AsPrimitive<f64>+PartialOrd+Display+Send+Sync+std::iter::Product+std::iter::Sum + LagBasicArithmetic {}
+impl<T> LagRealTrait for T where T: 'static + Float + Copy+AsPrimitive<f64>+PartialOrd+Display+Send+Sync+std::iter::Product+std::iter::Sum + LagBasicArithmetic {}
 
-/// Trait allowing the support of floating point real or complex data 
-pub trait LagComplexTrait<U: LagRealTrait>: 'static + NumCast + AddAssign + ComplexFloat + Send + Sync + std::iter::Sum + std::ops::Mul<U,Output = Self> + std::ops::Div<U,Output = Self> + DivAssign<U> + MulAssign<U> {}
-impl<T,U> LagComplexTrait<U> for T where T: 'static + NumCast + AddAssign + ComplexFloat + Send + Sync + std::iter::Sum + std::ops::Mul<U,Output = Self> + std::ops::Div<U,Output = Self> + DivAssign<U> + MulAssign<U>, <T as ComplexFloat>::Real: Float, U: LagRealTrait {}
+pub trait LagComplexTrait: 'static + ComplexFloat + Copy + Display + Send + Sync + std::iter::Product + std::iter::Sum + LagBasicArithmetic {}
+impl<T> LagComplexTrait for T where T: 'static + ComplexFloat + Copy + Display + Send + Sync + std::iter::Product + std::iter::Sum + LagBasicArithmetic {}
+
 
 /// Returns a vector containing the middle point of the input vector
 /// 
@@ -80,7 +84,7 @@ pub fn partial_sum<T: LagRealTrait>(xa: &Vec<T>, x: &T, j: usize) -> T {
 pub fn check_duplicate<T: LagRealTrait>(xa: &Vec<T>) {
     let mut xac = xa.clone();
     xac.sort_by(|a,b| a.partial_cmp(b).unwrap());
-    let _ = (0..xac.len()-1).map(|i| {let val = (xac[i+1]-xac[i]).abs().as_(); if val < 1e-10 { panic!("'xa' has duplicated entries");
+    let _ = (0..xac.len()-1).map(|i| {let val = Float::abs(xac[i+1]-xac[i]).as_(); if val < 1e-10 { panic!("'xa' has duplicated entries");
     } else {return val;}}).collect::<Vec<f64>>();
 }
 
@@ -94,7 +98,7 @@ pub fn check_duplicate<T: LagRealTrait>(xa: &Vec<T>) {
 /// ```
 pub fn gauss_chebyshev_nodes<T: LagRealTrait>(n: &usize, a: &T, b: &T) -> Vec<T> where i32: AsPrimitive<T> {
     (0..*n).map(|i| {
-        let x = -T::cos((T::acos(-one::<T>())*(i as i32).as_())/((*n-1) as i32).as_());
+        let x = -Float::cos((Float::acos(-one::<T>())*(i as i32).as_())/((*n-1) as i32).as_());
         return rescale_range(a, b, &x);
     }).collect::<Vec<_>>()
 }
