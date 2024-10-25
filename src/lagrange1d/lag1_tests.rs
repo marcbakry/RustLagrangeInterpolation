@@ -298,15 +298,15 @@ pub fn lag1_lagrange_basis_and_derivatives() {
     // 1st basis function
     let val_cal = &basis_value[0];
     let val_ref = xi.iter().map(|&x| f0(x)).collect::<Vec<_>>();
-    assert!(val_cal.iter().zip(val_ref.iter()).map(|(&a,&b)| (a-b).abs()).min_by(|a,b| a.partial_cmp(b).unwrap()).unwrap() < 1e-14);
+    assert!(val_cal.iter().zip(val_ref.iter()).map(|(&a,&b)| (a-b).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap() < 1e-14);
     // 2nd basis function
     let val_cal = &basis_value[1];
     let val_ref = xi.iter().map(|&x| f1(x)).collect::<Vec<_>>();
-    assert!(val_cal.iter().zip(val_ref.iter()).map(|(&a,&b)| (a-b).abs()).min_by(|a,b| a.partial_cmp(b).unwrap()).unwrap() < 1e-14);
+    assert!(val_cal.iter().zip(val_ref.iter()).map(|(&a,&b)| (a-b).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap() < 1e-14);
     // 3rd basis function
     let val_cal = &basis_value[2];
     let val_ref = xi.iter().map(|&x| f2(x)).collect::<Vec<_>>();
-    assert!(val_cal.iter().zip(val_ref.iter()).map(|(&a,&b)| (a-b).abs()).min_by(|a,b| a.partial_cmp(b).unwrap()).unwrap() < 1e-14);
+    assert!(val_cal.iter().zip(val_ref.iter()).map(|(&a,&b)| (a-b).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap() < 1e-14);
 
     // -----------------------------
     // evaluation of the derivatives
@@ -315,13 +315,13 @@ pub fn lag1_lagrange_basis_and_derivatives() {
     // 1st basis function
     let val_cal = i1d_basis_diff[0].eval_vec(&xi);
     let val_ref = xi.iter().map(|&x| df0_dx(x)).collect::<Vec<_>>();
-    assert!(val_cal.iter().zip(val_ref.iter()).map(|(&a,&b)| (a-b).abs()).min_by(|a,b| a.partial_cmp(b).unwrap()).unwrap() < 1e-14);
+    assert!(val_cal.iter().zip(val_ref.iter()).map(|(&a,&b)| (a-b).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap() < 1e-14);
     // 2nd basis function
     let val_cal = i1d_basis_diff[1].eval_vec(&xi);
     let val_ref = xi.iter().map(|&x| df1_dx(x)).collect::<Vec<_>>();
-    assert!(val_cal.iter().zip(val_ref.iter()).map(|(&a,&b)| (a-b).abs()).min_by(|a,b| a.partial_cmp(b).unwrap()).unwrap() < 1e-14);
+    assert!(val_cal.iter().zip(val_ref.iter()).map(|(&a,&b)| (a-b).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap() < 1e-14);
     // 3rd basis function
     let val_cal = i1d_basis_diff[2].eval_vec(&xi);
     let val_ref = xi.iter().map(|&x| df2_dx(x)).collect::<Vec<_>>();
-    assert!(val_cal.iter().zip(val_ref.iter()).map(|(&a,&b)| (a-b).abs()).min_by(|a,b| a.partial_cmp(b).unwrap()).unwrap() < 1e-14);
+    assert!(val_cal.iter().zip(val_ref.iter()).map(|(&a,&b)| (a-b).abs()).max_by(|a,b| a.partial_cmp(b).unwrap()).unwrap() < 1e-14);
 }
