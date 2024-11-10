@@ -112,6 +112,9 @@ pub fn gauss_chebyshev_nodes<T: LagRealTrait>(n: &usize, a: &T, b: &T) -> Vec<T>
 /// let x = linspace(&n,&a,&b); // should contain [-1.0,0.0,1.0]
 /// ```
 pub fn linspace<T:LagRealTrait>(n: &usize, a:&T, b: &T) -> Vec<T> {
+    if *n <= 1 {
+        panic!("linspace: minimum number of nodes should be at least 2");
+    }
     let stp = (*b-*a)/(T::from(*n-1).unwrap());
     (0..*n).map(|i| *a + T::from(i).unwrap()*stp).collect::<Vec<_>>()
 }
