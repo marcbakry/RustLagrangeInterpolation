@@ -4,7 +4,7 @@ extern crate num_traits;
 extern crate num;
 
 use num::{cast::AsPrimitive,complex::*};
-use num_traits::{Float,zero,one};
+use num_traits::{one, zero, Float, FloatConst};
 use std::cmp::PartialOrd;
 use std::fmt::Display;
 use std::ops::{Add, Sub, Mul, Div, AddAssign, SubAssign, DivAssign, MulAssign};
@@ -14,8 +14,8 @@ pub trait LagBasicArithmetic<U=Self>: Add<U,Output=Self>+Sub<U,Output=Self>+Div<
 impl <T,U> LagBasicArithmetic<U> for T where T: Add<U,Output=Self>+Sub<U,Output=Self>+Div<U,Output=Self>+Mul<U,Output=Self>+AddAssign<U>+SubAssign<U>+MulAssign<U>+DivAssign<U> {}
 
 /// Trait allowing the support of floating point data
-pub trait LagRealTrait: 'static + Float + Copy+AsPrimitive<f64>+PartialOrd+Display+Send+Sync+std::iter::Product+std::iter::Sum + LagBasicArithmetic {}
-impl<T> LagRealTrait for T where T: 'static + Float + Copy+AsPrimitive<f64>+PartialOrd+Display+Send+Sync+std::iter::Product+std::iter::Sum + LagBasicArithmetic {}
+pub trait LagRealTrait: 'static + Float + FloatConst + Copy+AsPrimitive<f64>+PartialOrd+Display+Send+Sync+std::iter::Product+std::iter::Sum + LagBasicArithmetic {}
+impl<T> LagRealTrait for T where T: 'static + Float + FloatConst + Copy+AsPrimitive<f64>+PartialOrd+Display+Send+Sync+std::iter::Product+std::iter::Sum + LagBasicArithmetic {}
 
 pub trait LagComplexTrait: 'static + ComplexFloat + Copy + Display + Send + Sync + std::iter::Product + std::iter::Sum + LagBasicArithmetic {}
 impl<T> LagComplexTrait for T where T: 'static + ComplexFloat + Copy + Display + Send + Sync + std::iter::Product + std::iter::Sum + LagBasicArithmetic {}
